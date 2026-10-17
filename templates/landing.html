@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ brand_a }} {{ brand_b }} · {{ tagline }}</title>
+    <meta name="description" content="{{ brand_a }} {{ brand_b }}: {{ tagline }} Get a plain-language risk report, a scam trust score, and live checks on the company's domain and reputation.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+    <script>(function(){var d=document.documentElement,q=new URLSearchParams(location.search),t,m;try{t=q.get('theme')||localStorage.getItem('fpd_theme_v1')}catch(e){t=q.get('theme')}if(t==='light'||t==='dark')d.setAttribute('data-theme',t);try{m=q.get('motion')||localStorage.getItem('fpd_motion_v1')}catch(e){m=q.get('motion')}if(m!=='on'&&m!=='off')m=(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?'off':'on';d.setAttribute('data-motion',m)})()</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fx.css') }}?v=4">
+</head>
+<body class="lp">
+    <div class="lp-bg" aria-hidden="true"><span class="lp-orb lp-orb-1"></span><span class="lp-orb lp-orb-2"></span><span class="lp-orb lp-orb-3"></span></div>
+
+    <header class="lp-nav" id="lpNav">
+        <a class="lp-brand" href="/" aria-label="{{ brand_a }} {{ brand_b }} home">
+            <span class="lp-logo"><i class="fas fa-shield-halved"></i></span>
+            <span class="lp-brand-text"><span class="lp-brand-name">{{ brand_a }} <b>{{ brand_b }}</b></span><small>{{ tagline }}</small></span>
+        </a>
+        <nav class="lp-links" aria-label="Sections">
+            <a href="#how">How it works</a>
+            <a href="#checks">What it checks</a>
+            <a href="#score">Trust score</a>
+            <a href="#faq">FAQ</a>
+        </nav>
+        <div class="lp-nav-actions">
+            <button class="lp-icon-btn motion-btn" id="motionToggleBtn" type="button" aria-pressed="true" title="Animations: on" aria-label="Toggle animations"><i class="fas fa-wand-magic-sparkles"></i></button>
+            <button class="lp-icon-btn" id="themeToggleBtn" type="button" title="Toggle theme" aria-label="Toggle theme"><i class="fas fa-sun" id="themeToggleIcon"></i></button>
+            <a class="lp-btn lp-btn-primary lp-btn-sm" href="/app">Try it free <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </header>
+
+    <main>
+        <!-- HERO -->
+        <section class="lp-hero">
+            <div class="lp-hero-copy">
+                <span class="lp-pill"><span class="lp-pulse"></span> Built for students signing their first contract</span>
+                <h1>Read the fine print <span class="lp-grad">before it reads you.</span></h1>
+                <p class="lp-lead">Paste a rental agreement, internship offer, scholarship or loan. Get a plain-language risk report, a <strong>scam trust score</strong>, and live checks on the company's domain and public reputation.</p>
+                <div class="lp-cta-row">
+                    <a class="lp-btn lp-btn-primary lp-btn-lg" href="/app"><i class="fas fa-magnifying-glass"></i> Decode a document</a>
+                    <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/app?example=scam"><i class="fas fa-wand-magic-sparkles"></i> See a scam get caught</a>
+                </div>
+                <ul class="lp-trust-row">
+                    <li><i class="fas fa-circle-check"></i> Every quote verified</li>
+                    <li><i class="fas fa-circle-check"></i> Documents never stored</li>
+                    <li><i class="fas fa-circle-check"></i> Free to use</li>
+                </ul>
+            </div>
+
+            <div class="lp-hero-visual" aria-hidden="true">
+                <div class="lp-mock" id="heroMock">
+                    <div class="lp-mock-bar">
+                        <span class="lp-dots"><i></i><i></i><i></i></span>
+                        <span class="lp-mock-file"><i class="fas fa-file-lines"></i> internship_offer.pdf</span>
+                        <span class="lp-scan" id="heroScan"><i class="fas fa-circle-notch fa-spin"></i> scanning</span>
+                    </div>
+                    <div class="lp-mock-body">
+                        <p>Dear Candidate, you are <mark data-i="0">selected without any interview</mark> for the Data Entry Intern role. Stipend: <mark data-i="1">Rs 45,000 per month for 2 hours of work daily</mark>.</p>
+                        <p>To confirm your seat you must <mark data-i="2">pay a refundable registration fee of Rs 4,999 within 24 hours</mark>. Contact: <mark data-i="3">hr.globaltech@gmail.com</mark></p>
+                    </div>
+                    <div class="lp-mock-result verdict-high" id="heroResult">
+                        <div class="trust-ring" id="heroRing" style="--pct:50">
+                            <div class="trust-ring-inner"><strong id="heroScore">50</strong><span>/100</span></div>
+                        </div>
+                        <div class="lp-mock-chips">
+                            <span class="lp-chip lp-chip-bad" data-i="0"><i class="fas fa-circle-minus"></i> No selection process</span>
+                            <span class="lp-chip lp-chip-bad" data-i="1"><i class="fas fa-circle-minus"></i> Pay too good to be true</span>
+                            <span class="lp-chip lp-chip-bad" data-i="2"><i class="fas fa-circle-minus"></i> Asks you to pay money</span>
+                            <span class="lp-chip lp-chip-bad" data-i="3"><i class="fas fa-circle-minus"></i> Free email address</span>
+                            <span class="risk-badge risk-high lp-verdict" id="heroVerdict"><i class="fas fa-triangle-exclamation"></i> High scam risk</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STRIP -->
+        <section class="lp-strip lp-reveal" aria-label="At a glance">
+            <div><strong>5</strong><span>document types</span></div>
+            <div><strong>100%</strong><span>of quotes checked against your text</span></div>
+            <div><strong>Live</strong><span>domain age, website &amp; web search</span></div>
+            <div><strong>0</strong><span>documents stored on the server</span></div>
+        </section>
+
+        <!-- HOW IT WORKS -->
+        <section class="lp-section" id="how">
+            <div class="lp-head lp-reveal">
+                <span class="lp-tag">How it works</span>
+                <h2>From confusing paperwork to a clear answer in a minute</h2>
+                <p>No legal background needed. You stay in control of what you share.</p>
+            </div>
+            <ol class="lp-steps">
+                <li class="lp-card lp-reveal">
+                    <span class="lp-step-num">1</span>
+                    <div class="lp-ico lp-ico-violet"><i class="fas fa-file-arrow-up"></i></div>
+                    <h3>Paste or upload</h3>
+                    <p>Drop in a PDF or .txt (up to 5 MB) or paste the text. For internship offers, add the sender's email, company name and website for a sharper check.</p>
+                </li>
+                <li class="lp-card lp-reveal">
+                    <span class="lp-step-num">2</span>
+                    <div class="lp-ico lp-ico-cyan"><i class="fas fa-magnifying-glass-chart"></i></div>
+                    <h3>We read it skeptically</h3>
+                    <p>An AI reviewer hunts for traps in your document while live checks look up the company's domain, website and public reviews.</p>
+                </li>
+                <li class="lp-card lp-reveal">
+                    <span class="lp-step-num">3</span>
+                    <div class="lp-ico lp-ico-pink"><i class="fas fa-clipboard-check"></i></div>
+                    <h3>Get a report you can act on</h3>
+                    <p>Red flags with the exact clause quoted, money and deadlines in one list, and questions to ask before you sign.</p>
+                </li>
+            </ol>
+        </section>
+
+        <!-- WHAT IT CHECKS -->
+        <section class="lp-section" id="checks">
+            <div class="lp-head lp-reveal">
+                <span class="lp-tag">What it checks</span>
+                <h2>More than a summary: evidence you can verify</h2>
+                <p>Every finding points back to your document or to a source you can open.</p>
+            </div>
+            <div class="lp-grid-3">
+                <article class="lp-card lp-feature lp-reveal">
+                    <div class="lp-ico lp-ico-red"><i class="fas fa-flag"></i></div>
+                    <h3>Red flags, with receipts</h3>
+                    <p>Auto-renewals, forfeited deposits, one-sided rent hikes, training bonds. Each flag quotes the clause and explains why it matters.</p>
+                    <span class="lp-feature-tag">Quotes verified word for word</span>
+                </article>
+                <article class="lp-card lp-feature lp-reveal">
+                    <div class="lp-ico lp-ico-violet"><i class="fas fa-user-shield"></i></div>
+                    <h3>Internship trust score</h3>
+                    <p>A 0 to 100 score with a clear verdict, built from fixed rules you can read. Warning signs and good signs are listed separately.</p>
+                    <span class="lp-feature-tag">Rules, not vibes</span>
+                </article>
+                <article class="lp-card lp-feature lp-reveal">
+                    <div class="lp-ico lp-ico-cyan"><i class="fas fa-globe"></i></div>
+                    <h3>Domain age &amp; website check</h3>
+                    <p>Is the company's domain brand new or unregistered? Does the website load, mention the company, or look parked?</p>
+                    <span class="lp-feature-tag">Live RDAP lookup</span>
+                </article>
+                <article class="lp-card lp-feature lp-reveal">
+                    <div class="lp-ico lp-ico-orange"><i class="fas fa-comments"></i></div>
+                    <h3>Web &amp; Reddit reputation</h3>
+                    <p>Searches for scam reports, complaints and real experiences, and links the sources so you can read them yourself.</p>
+                    <span class="lp-feature-tag">Sources linked</span>
+                </article>
+                <article class="lp-card lp-feature lp-reveal">
+                    <div class="lp-ico lp-ico-green"><i class="fas fa-calendar-check"></i></div>
+                    <h3>Deadlines &amp; money</h3>
+                    <p>Every fee, deposit, notice period and date pulled into one list, so nothing hides in paragraph nine.</p>
+                    <span class="lp-feature-tag">One glance</span>
+                </article>
+                <article class="lp-card lp-feature lp-reveal">
+                    <div class="lp-ico lp-ico-pink"><i class="fas fa-circle-question"></i></div>
+                    <h3>Questions to ask</h3>
+                    <p>Specific questions to send before you sign, each with a copy button. Plus a checklist to verify the company yourself.</p>
+                    <span class="lp-feature-tag">Copy &amp; send</span>
+                </article>
+            </div>
+        </section>
+
+        <!-- TRUST SCORE DEMO -->
+        <section class="lp-section" id="score">
+            <div class="lp-head lp-reveal">
+                <span class="lp-tag">Trust score</span>
+                <h2>See how three different offers score</h2>
+                <p>These are fictional examples. Tap one to see the signals behind its score.</p>
+            </div>
+            <div class="lp-demo lp-reveal">
+                <div class="lp-tabs" role="tablist" aria-label="Example offers">
+                    <button class="lp-tab active" role="tab" aria-selected="true" data-demo="scam" type="button"><i class="fas fa-skull-crossbones"></i> Obvious scam</button>
+                    <button class="lp-tab" role="tab" aria-selected="false" data-demo="fake" type="button"><i class="fas fa-masks-theater"></i> Polished fake</button>
+                    <button class="lp-tab" role="tab" aria-selected="false" data-demo="real" type="button"><i class="fas fa-building-circle-check"></i> Plausible offer</button>
+                </div>
+                <div class="lp-demo-panel verdict-high" id="demoPanel" role="tabpanel">
+                    <div class="lp-demo-score">
+                        <div class="trust-ring" id="demoRing" style="--pct:0"><div class="trust-ring-inner"><strong id="demoScore">0</strong><span>/100</span></div></div>
+                        <span class="risk-badge risk-high" id="demoVerdict"><i class="fas fa-triangle-exclamation"></i> High scam risk</span>
+                        <p id="demoNote" class="lp-demo-note"></p>
+                    </div>
+                    <ul class="lp-signals" id="demoSignals"></ul>
+                </div>
+            </div>
+            <p class="lp-fine lp-reveal"><i class="fas fa-circle-info"></i> The score starts at 50, gains up to 25 for good signs and loses points for warning signs. One confirmed serious warning caps it at 35, and it never exceeds 85 because a document alone can't prove a company is real.</p>
+        </section>
+
+        <!-- DOC TYPES -->
+        <section class="lp-section lp-section-tight">
+            <div class="lp-head lp-reveal">
+                <span class="lp-tag">Documents</span>
+                <h2>Tuned for the paperwork students actually sign</h2>
+            </div>
+            <div class="lp-doctypes lp-reveal">
+                <div><i class="fas fa-house"></i><span>Rental &amp; lease</span></div>
+                <div><i class="fas fa-briefcase"></i><span>Internship offers</span></div>
+                <div><i class="fas fa-graduation-cap"></i><span>Scholarships</span></div>
+                <div><i class="fas fa-credit-card"></i><span>Loans</span></div>
+                <div><i class="fas fa-file-contract"></i><span>Any contract</span></div>
+            </div>
+        </section>
+
+        <!-- HONESTY -->
+        <section class="lp-section" id="trust">
+            <div class="lp-honest lp-reveal">
+                <div>
+                    <span class="lp-tag">Built to be honest</span>
+                    <h2>An AI that shows its work, and admits its limits</h2>
+                    <p>A confident wrong answer is worse than none. So the tool is designed to be checked.</p>
+                </div>
+                <ul class="lp-list">
+                    <li><i class="fas fa-quote-left"></i><div><strong>Quotes are verified.</strong> If the AI's quoted clause isn't in your document, it's marked, not trusted.</div></li>
+                    <li><i class="fas fa-scale-balanced"></i><div><strong>The score is rule-based.</strong> The AI only finds evidence. It can't pick the number.</div></li>
+                    <li><i class="fas fa-lock"></i><div><strong>Your document stays private.</strong> Processed in memory, never written to disk. Only the company's domain and name are used for lookups.</div></li>
+                    <li><i class="fas fa-triangle-exclamation"></i><div><strong>No data isn't a verdict.</strong> Many real small companies have no online footprint, and we say so instead of guessing.</div></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="lp-section" id="faq">
+            <div class="lp-head lp-reveal">
+                <span class="lp-tag">FAQ</span>
+                <h2>Questions you might have</h2>
+            </div>
+            <div class="lp-faq lp-reveal">
+                <details><summary>Is this legal advice?</summary><p>No. It helps you spot things worth asking about. For anything important, have a lawyer, your college's legal cell or someone you trust review it before you sign.</p></details>
+                <details><summary>Is my document stored?</summary><p>No. Uploads are processed in memory and never saved to disk or logged. Your saved reports live only in your own browser and contain the report, not the full document.</p></details>
+                <details><summary>Can it prove an internship is real?</summary><p>No tool can from a document alone. It looks for scam patterns and checks public signals like domain age and reviews, then gives you a checklist to verify the company yourself on its official website.</p></details>
+                <details><summary>What if it finds nothing about my company?</summary><p>That's common for small or new firms and is reported as "no public discussion", not as a warning. Use the verification checklist and ask the company for a call with a named employee.</p></details>
+                <details><summary>Which languages and formats work?</summary><p>English text in PDF or .txt files up to 5 MB. Scanned images aren't readable, so paste the text instead.</p></details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="lp-footer">
+        <div class="lp-brand"><span class="lp-logo"><i class="fas fa-shield-halved"></i></span><span class="lp-brand-text"><span class="lp-brand-name">{{ brand_a }} <b>{{ brand_b }}</b></span><small>{{ tagline }}</small></span></div>
+        <p><i class="fas fa-scale-balanced"></i> Not legal advice. Have someone you trust review anything important.</p>
+        <p class="lp-foot-contact"><i class="fas fa-envelope"></i> Contact the developer: <a href="mailto:arpanghosh6734@gmail.com">arpanghosh6734@gmail.com</a></p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/landing.js') }}?v=5"></script>
+    <script src="{{ url_for('static', filename='js/fx.js') }}?v=2"></script>
+</body>
+</html>

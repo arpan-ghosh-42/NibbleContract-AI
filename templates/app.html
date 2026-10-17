@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decode a document · {{ brand_a }} {{ brand_b }}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+    <script>(function(){var d=document.documentElement,q=new URLSearchParams(location.search),t,m;try{t=q.get('theme')||localStorage.getItem('fpd_theme_v1')}catch(e){t=q.get('theme')}if(t==='light'||t==='dark')d.setAttribute('data-theme',t);try{m=q.get('motion')||localStorage.getItem('fpd_motion_v1')}catch(e){m=q.get('motion')}if(m!=='on'&&m!=='off')m=(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?'off':'on';d.setAttribute('data-motion',m)})()</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fx.css') }}?v=4">
+</head>
+<body class="app-page">
+    <header class="topbar">
+        <a class="brand" href="/" title="Back to home">
+            <div class="brand-logo-icon"><i class="fas fa-shield-halved"></i></div>
+            <div>
+                <h1>{{ brand_a }} <b>{{ brand_b }}</b></h1>
+                <span>{{ tagline }}</span>
+            </div>
+        </a>
+        <div class="topbar-actions">
+            <a class="top-link" href="/"><i class="fas fa-house"></i> <span>Home</span></a>
+            <button class="header-btn motion-btn" id="motionToggleBtn" type="button" aria-pressed="true" title="Animations: on" aria-label="Toggle animations"><i class="fas fa-wand-magic-sparkles"></i></button>
+            <button class="header-btn" id="themeToggleBtn" title="Toggle theme" aria-label="Toggle theme"><i class="fas fa-sun" id="themeToggleIcon"></i></button>
+        </div>
+    </header>
+
+    <main class="page">
+        <section class="app-intro">
+            <h2>Decode a document</h2>
+            <p>Paste it or upload it. You'll get red flags with the exact clause quoted, the money and deadlines, and questions to ask before you sign.</p>
+        </section>
+
+        <section class="panel" id="inputPanel">
+            <div class="example-row" id="exampleRow">
+                <span class="example-label"><i class="fas fa-wand-magic-sparkles"></i> No document handy? Try a fictional example:</span>
+                <button class="example-chip" type="button" data-example="scam"><i class="fas fa-skull-crossbones"></i> Obvious scam offer</button>
+                <button class="example-chip" type="button" data-example="fake"><i class="fas fa-masks-theater"></i> Polished fake offer</button>
+                <button class="example-chip" type="button" data-example="lease"><i class="fas fa-house"></i> Lease with bad clauses</button>
+            </div>
+
+            <div class="form-row">
+                <label class="field-label" for="decoderDocType"><i class="fas fa-file-shield"></i> Document type</label>
+                <select class="style-dropdown" id="decoderDocType">
+                    <option value="rental">🏠 Rental / lease agreement</option>
+                    <option value="internship_offer">💼 Internship offer</option>
+                    <option value="scholarship">🎓 Scholarship terms</option>
+                    <option value="loan">💳 Loan paperwork</option>
+                    <option value="other">📄 Other contract</option>
+                </select>
+                <input type="file" id="decoderFileInput" accept=".pdf,.txt,application/pdf,text/plain" style="display:none;">
+                <button class="btn" id="btnAttach" type="button"><i class="fas fa-paperclip"></i> Upload PDF / .txt</button>
+                <div class="decoder-file-chip" id="decoderFileChip" style="display:none;">
+                    <i class="fas fa-file-lines" id="decoderFileIcon"></i>
+                    <span class="decoder-file-name" id="decoderFileName"></span>
+                    <button class="decoder-file-remove" id="decoderFileRemove" type="button" title="Remove file"><i class="fas fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <div class="form-row auth-fields" id="authFields" style="display:none;">
+                <span class="field-label"><i class="fas fa-user-shield"></i> Authenticity check (optional; the website and email domain are looked up online):</span>
+                <input class="auth-input" id="senderEmail" type="text" maxlength="200" autocomplete="off" placeholder="Sender email (hr@company.com)">
+                <input class="auth-input" id="companyName" type="text" maxlength="120" autocomplete="off" placeholder="Company name">
+                <input class="auth-input" id="companyWebsite" type="text" maxlength="200" autocomplete="off" placeholder="Official website (company.com)">
+            </div>
+
+            <div class="drop-zone" id="dropZone">
+                <textarea class="doc-textarea" id="docText" placeholder="Paste the document text here, or upload a PDF/.txt (max 5 MB). You can also drag a file onto this box."></textarea>
+            </div>
+
+            <div class="action-row">
+                <p class="decoder-disclaimer"><i class="fas fa-scale-balanced"></i> Not legal advice. Have someone you trust review anything important.</p>
+                <button class="btn btn-primary" id="btnDecode" type="button"><i class="fas fa-magnifying-glass"></i> Decode</button>
+            </div>
+            <p class="hint" style="margin-top:6px;">Ctrl + Enter to decode. Documents are processed in memory and are not stored on the server.</p>
+        </section>
+
+        <section id="statusArea" aria-live="polite"></section>
+        <section id="reportArea"></section>
+
+        <section class="panel" id="historyPanel" style="display:none;">
+            <div class="history-title">Saved reports <span class="hint">(kept only in this browser)</span></div>
+            <div id="historyList"></div>
+        </section>
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>window.BRAND_NAME = {{ (brand_a ~ " " ~ brand_b) | tojson }};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
+    <script src="{{ url_for('static', filename='js/samples.js') }}?v=1"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=7"></script>
+    <script src="{{ url_for('static', filename='js/fx.js') }}?v=2"></script>
+</body>
+</html>
