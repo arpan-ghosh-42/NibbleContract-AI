@@ -4,8 +4,6 @@
 
 Paste text or upload a PDF/.txt of a rental agreement, internship offer, scholarship terms, loan paperwork, or any contract, and get a plain-language risk report.
 
-Split out of the Nova AI chatbot into its own project.
-
 ## What you get
 
 - Overall risk badge (low / medium / high) and a 2-3 sentence summary
