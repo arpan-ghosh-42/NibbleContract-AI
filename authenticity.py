@@ -14,7 +14,6 @@ import re
 
 import decoder
 import lookups
-import reviews
 
 MAX_TEXT_CHARS = 15_000      # offer letters are short; only the start is analysed
 MAX_SIGNAL_QUOTE = 400
@@ -330,7 +329,7 @@ def build_checklist(company, website_domain, sender_domain, signal_ids):
 
 
 def assess(client, model, text, sender_email="", company_name="", website="", live_lookups=True,
-           run_checks=None, tavily_key="", run_reviews=None):
+           run_checks=None, tavily_key="", run_reviews=None, use_agents=None):
     """Return the authenticity block for an internship offer.
 
     run_checks / run_reviews can be injected for tests; they default to
@@ -344,20 +343,12 @@ def assess(client, model, text, sender_email="", company_name="", website="", li
     found, company_in_doc = model_signals(client, model, text, sender_email, company_name, website)
     company = company_name or company_in_doc
 
-    online, checks = [], []
-    if live_lookups:
-        domains, site_target, sender_domain = lookup_targets(text, sender_email, website)
-        words, joined = _company_tokens(company)
-        online, checks = (run_checks or lookups.run_checks)(domains, site_target, words, joined, sender_domain)
-        if tavily_key:
-            review_signals, review_check = (run_reviews or reviews.check_reputation)(client, model, company, tavily_key)
-            online = online + review_signals
-            checks = checks + [review_check]
-        else:
-            checks.append({"name": "Web & Reddit search", "status": "skipped",
-                           "detail": "Add TAVILY_API_KEY to .env to search for public reviews and scam reports."})
-    else:
-        checks = [{"name": "Online lookups", "status": "skipped", "detail": "Online lookups are turned off on this server."}]
+    # Online research: the agents when enabled, otherwise (or on failure) lookups.run_checks + reviews.
+    from agents import orchestrator
+    research = orchestrator.research(client, model, text, company, website, sender_email=sender_email,
+                                     live_lookups=live_lookups, tavily_key=tavily_key, run_checks=run_checks,
+                                     run_reviews=run_reviews, use_agents=use_agents)
+    online, checks = research["signals"], research["checks"]
 
     signals = sender_signals(text, sender_email, company, website) + found + online
     # A "named contact" on a free email address is not a trust signal.
@@ -386,6 +377,7 @@ def assess(client, model, text, sender_email="", company_name="", website="", li
         "company": company,
         "signals": signals,
         "checks": checks,
+        "agents": research["agents"],
         "checklist": build_checklist(
             company, domain_from_url(website), email_domain(sender_email),
             {s["id"] for s in signals if s["counted"]}),

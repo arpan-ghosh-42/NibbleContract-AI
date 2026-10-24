@@ -72,6 +72,16 @@ WEIGHT_OVERRIDES = {
     "domain_established": "low",      # domain age is not company age
 }
 
+# Funding news only counts from established news sites, and only as a bonus.
+RECENT_FUNDING_YEARS = 3
+CREDIBLE_NEWS_DOMAINS = {
+    "techcrunch.com", "inc42.com", "yourstory.com", "entrackr.com", "vccircle.com", "indiatimes.com",
+    "livemint.com", "moneycontrol.com", "business-standard.com", "thehindubusinessline.com",
+    "financialexpress.com", "businesstoday.in", "thehindu.com", "hindustantimes.com", "ndtvprofit.com",
+    "the-ken.com", "themorningcontext.com", "medianama.com", "reuters.com", "bloomberg.com", "forbes.com",
+    "venturebeat.com", "sifted.eu", "techinasia.com", "businessinsider.com", "cnbc.com",
+}
+
 PAYMENT_SIGNALS = {"asks_payment"}
 # Warnings about scammers using a company's name say nothing about the company itself.
 NEVER_COUNTED = {"impersonation_warnings"}

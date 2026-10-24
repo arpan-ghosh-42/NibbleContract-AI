@@ -3,4 +3,8 @@ openai
 python-dotenv
 pypdf
 trafilatura
+agno==3.1.10
+ddgs
+groq
+pydantic
 gunicorn
