@@ -2,4 +2,5 @@ flask
 openai
 python-dotenv
 pypdf
+trafilatura
 gunicorn

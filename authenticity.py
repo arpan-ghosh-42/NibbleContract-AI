@@ -100,6 +100,7 @@ _COMPANY_SUFFIXES = {"inc", "ltd", "llc", "llp", "pvt", "private", "limited", "c
 
 _EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@([A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)+)")
 _URL_RE = re.compile(r"(?:https?://|www\.)([A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)+)", re.IGNORECASE)
+_BARE_SHORTENER_RE = re.compile(r"(?<![\w.])(" + "|".join(re.escape(d) for d in sorted(URL_SHORTENERS)) + r")/", re.IGNORECASE)
 
 
 def registered_domain(host):
@@ -185,7 +186,9 @@ def sender_signals(text, sender_email, company_name, website):
                     f"The email comes from {sender}, which doesn't look related to '{company_name}'.",
                     evidence=sender, source=sender_source))
 
-    shorteners = sorted({registered_domain(d) for d in _URL_RE.findall(text)} & URL_SHORTENERS)
+    linked = {registered_domain(d) for d in _URL_RE.findall(text)}
+    linked |= {d.lower() for d in _BARE_SHORTENER_RE.findall(text)}   # "bit.ly/x" written without https://
+    shorteners = sorted(linked & URL_SHORTENERS)
     if shorteners:
         signals.append(_signal(
             "shortened_links", "negative", "low", "Uses shortened or chat links",

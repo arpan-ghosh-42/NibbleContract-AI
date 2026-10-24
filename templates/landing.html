@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}?v=8">
 </head>
 <body class="lp">
@@ -38,10 +38,10 @@
             <div class="lp-hero-copy">
                 <span class="lp-pill">Built for students hunting for internships</span>
                 <h1>Is that internship <span class="lp-accent">the real thing?</span></h1>
-                <p class="lp-lead">Paste an internship offer letter or upload the PDF. Get a <strong>0 to 100 trust score</strong> with the evidence behind it, every red flag in the terms, and live checks on the company's domain, website and public reputation.</p>
+                <p class="lp-lead">Check the job post before you apply, and the offer letter before you sign. Get a <strong>0 to 100 trust score</strong> with the evidence behind it, and live checks on the company's domain, website and public reputation.</p>
                 <div class="lp-cta-row">
-                    <a class="lp-btn lp-btn-primary lp-btn-lg" href="/app"><i class="fas fa-magnifying-glass"></i> Check an offer letter</a>
-                    <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/app?example=scam"><i class="fas fa-eye"></i> Try a risky example</a>
+                    <a class="lp-btn lp-btn-primary lp-btn-lg" href="/app"><i class="fas fa-magnifying-glass"></i> Check a job post</a>
+                    <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/app?tool=offer"><i class="fas fa-file-signature"></i> Check an offer letter</a>
                 </div>
                 <ul class="lp-trust-row">
                     <li><i class="fas fa-circle-check"></i> Every quote verified</li>

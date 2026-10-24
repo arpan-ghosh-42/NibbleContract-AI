@@ -1,6 +1,7 @@
 /**
  * NibbleContract AI frontend
- * Paste or upload an internship offer letter, get a trust score and a plain-language risk report.
+ * Two checks: a job post (before applying) and an offer letter (before signing).
+ * Each returns a trust score with its evidence.
  */
 
 const STORAGE_KEYS = {
@@ -14,7 +15,10 @@ const MAX_SAVED_REPORTS = 30;
 const DECODER_DISCLAIMER = 'Not legal advice. Have someone you trust review anything important.';
 const SEVERITY_ORDER = { high: 0, medium: 1, low: 2 };
 
-const State = { file: null, busy: false, reports: [] };
+const State = { file: null, busy: false, reports: [], tool: 'post' };
+const TOOLS = { post: { tab: 'tabPost', panel: 'postPanel' }, offer: { tab: 'tabOffer', panel: 'inputPanel' } };
+// Example keys used by older links.
+const EXAMPLE_ALIASES = { scam: 'post_risky', fake: 'offer_fake' };
 
 const $ = id => document.getElementById(id);
 
@@ -24,29 +28,57 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEvents();
     renderHistory();
 
-    // Landing-page links open the tool with a ready-made example: /app?example=scam
-    const wanted = new URLSearchParams(window.location.search).get('example');
+    // Links can pick the tool (/app?tool=offer) or open a ready-made example (/app?example=post_risky).
+    const params = new URLSearchParams(window.location.search);
+    setTool(params.get('tool') === 'offer' ? 'offer' : 'post');
+    const wanted = EXAMPLE_ALIASES[params.get('example')] || params.get('example');
     if (wanted && window.FPD_SAMPLES && window.FPD_SAMPLES[wanted]) loadExample(wanted);
 });
+
+function setTool(tool) {
+    State.tool = TOOLS[tool] ? tool : 'post';
+    Object.entries(TOOLS).forEach(([name, ids]) => {
+        const on = name === State.tool;
+        $(ids.tab).classList.toggle('active', on);
+        $(ids.tab).setAttribute('aria-selected', on ? 'true' : 'false');
+        $(ids.panel).hidden = !on;
+    });
+}
 
 // Fill the form with one of the fictional examples (see samples.js).
 function loadExample(key) {
     const sample = window.FPD_SAMPLES && window.FPD_SAMPLES[key];
     if (!sample) return;
-    setFile(null);
-    $('senderEmail').value = sample.sender_email || '';
-    $('companyName').value = sample.company_name || '';
-    $('companyWebsite').value = sample.website || '';
-    $('docText').value = sample.text;
+    if (sample.kind === 'post') {
+        setTool('post');
+        $('postCompany').value = sample.company_name || '';
+        $('postWebsite').value = sample.website || '';
+        $('postUrl').value = sample.url || '';
+        $('postText').value = sample.text;
+        $('postText').scrollTop = 0;
+    } else {
+        setTool('offer');
+        setFile(null);
+        $('senderEmail').value = sample.sender_email || '';
+        $('companyName').value = sample.company_name || '';
+        $('companyWebsite').value = sample.website || '';
+        $('docText').value = sample.text;
+        $('docText').scrollTop = 0;
+    }
     document.querySelectorAll('.example-chip').forEach(chip =>
         chip.classList.toggle('active', chip.dataset.example === key));
-    $('docText').scrollTop = 0;
 }
 
 // While waiting for the server, cycle through what it is actually doing.
-function startProgressMessages() {
-    const steps = ['Reading the offer...', 'Hunting for red flags...', 'Checking the domain and website...',
-        'Searching the web for reports...', 'Scoring the offer...'];
+const PROGRESS_STEPS = {
+    offer: ['Reading the offer...', 'Hunting for red flags...', 'Checking the domain and website...',
+        'Searching the web for reports...', 'Scoring the offer...'],
+    post: ['Reading the post...', 'Looking for warning signs...', 'Checking the company\'s domain and website...',
+        'Searching the web and Reddit...', 'Scoring the post...']
+};
+
+function startProgressMessages(kind) {
+    const steps = PROGRESS_STEPS[kind];
     let i = 0;
     const el = () => document.getElementById('progressText');
     const timer = setInterval(() => {
@@ -102,6 +134,9 @@ function saveReports() {
 // ---------------------------------------------------------------------------
 function setupEvents() {
     $('themeToggleBtn').addEventListener('click', toggleTheme);
+    document.querySelectorAll('.tool-tab').forEach(tab =>
+        tab.addEventListener('click', () => setTool(tab.dataset.tool)));
+    $('btnCheckPost').addEventListener('click', handleCheckPost);
     $('btnDecode').addEventListener('click', handleDecode);
     document.querySelectorAll('.example-chip').forEach(chip =>
         chip.addEventListener('click', () => loadExample(chip.dataset.example)));
@@ -109,12 +144,15 @@ function setupEvents() {
     $('decoderFileInput').addEventListener('change', e => setFile(e.target.files[0] || null));
     $('decoderFileRemove').addEventListener('click', () => setFile(null));
 
-    $('docText').addEventListener('keydown', e => {
+    const submitOnCtrlEnter = handler => e => {
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
-            handleDecode();
+            handler();
         }
-    });
+    };
+    $('docText').addEventListener('keydown', submitOnCtrlEnter(handleDecode));
+    $('postText').addEventListener('keydown', submitOnCtrlEnter(handleCheckPost));
+    $('postUrl').addEventListener('keydown', e => { if (e.key === 'Enter') handleCheckPost(); });
 
     const zone = $('dropZone');
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
@@ -152,8 +190,39 @@ function setFile(file) {
 }
 
 // ---------------------------------------------------------------------------
-// Decode
+// Checks
 // ---------------------------------------------------------------------------
+async function handleCheckPost() {
+    if (State.busy) return;
+    const pasted = $('postText').value.trim();
+    const url = $('postUrl').value.trim();
+    if (!pasted && !url) {
+        showToast('Paste the job post text, or a link to it, first.');
+        return;
+    }
+    if (pasted && pasted.length < MIN_CHARS) {
+        showToast('That is too short to check. Paste the full job post.');
+        return;
+    }
+    if (pasted && url) showToast('Using the pasted text (the link is ignored).');
+
+    const form = new FormData();
+    if (pasted) form.append('text', pasted); else form.append('url', url);
+    form.append('company_name', $('postCompany').value.trim());
+    form.append('website', $('postWebsite').value.trim());
+
+    await submitCheck('post', '/check-post', form, 'btnCheckPost', result => {
+        const report = normalizePostReport(result);
+        $('postText').value = '';
+        $('postUrl').value = '';
+        return {
+            kind: 'post',
+            title: [report.role, report.company].filter(Boolean).join(' · ') || 'Pasted job post',
+            report: report
+        };
+    });
+}
+
 async function handleDecode() {
     if (State.busy) return;
     const pasted = $('docText').value.trim();
@@ -168,23 +237,32 @@ async function handleDecode() {
     }
     if (State.file && pasted) showToast('Using the uploaded file (pasted text is ignored).');
 
-    const docType = 'internship_offer';
     const form = new FormData();
     if (State.file) form.append('file', State.file); else form.append('text', pasted);
     form.append('sender_email', $('senderEmail').value.trim());
     form.append('company_name', $('companyName').value.trim());
     form.append('website', $('companyWebsite').value.trim());
 
-    setBusy(true);
+    await submitCheck('offer', '/decode', form, 'btnDecode', result => {
+        const report = normalizeReport(result);
+        $('docText').value = '';
+        setFile(null);
+        return { kind: 'offer', title: report.meta.filename || 'Pasted offer letter', report: report };
+    });
+}
+
+// POST a form, show progress, then save and show the report that toEntry() builds from the result.
+async function submitCheck(kind, endpoint, form, buttonId, toEntry) {
+    setBusy(true, buttonId);
     $('reportArea').innerHTML = '';
-    const progress = startProgressMessages();
+    const progress = startProgressMessages(kind);
     $('statusArea').innerHTML = `
         <div class="panel loading"><div class="spinner"></div>
         <div><strong id="progressText">${escapeHtml(progress.first)}</strong>
         <div class="hint">The online checks can take up to a minute.</div></div></div>`;
 
     try {
-        const response = await fetch('/decode', { method: 'POST', body: form });
+        const response = await fetch(endpoint, { method: 'POST', body: form });
         let data;
         try {
             data = await response.json();
@@ -197,36 +275,26 @@ async function handleDecode() {
             return;
         }
 
-        const report = normalizeReport(data.result);
-        const entry = {
-            id: 'rep_' + Date.now(),
-            createdAt: new Date().toISOString(),
-            docType: docType,
-            title: report.meta.filename || 'Pasted offer letter',
-            report: report
-        };
+        const entry = Object.assign({ id: 'rep_' + Date.now(), createdAt: new Date().toISOString() }, toEntry(data.result));
         State.reports.unshift(entry);
         saveReports();
         renderHistory();
         $('statusArea').innerHTML = '';
         showReport(entry);
-        $('docText').value = '';
-        setFile(null);
     } catch (err) {
         $('statusArea').innerHTML = `<div class="error-box"><i class="fas fa-triangle-exclamation"></i> Could not reach the server. Is it running? (${escapeHtml(err.message)})</div>`;
     } finally {
         progress.stop();
-        setBusy(false);
+        setBusy(false, buttonId);
     }
 }
 
-function setBusy(busy) {
+function setBusy(busy, buttonId) {
     State.busy = busy;
-    const btn = $('btnDecode');
+    const btn = $(buttonId);
+    if (busy) btn.dataset.label = btn.innerHTML;
     btn.disabled = busy;
-    btn.innerHTML = busy
-        ? '<i class="fas fa-spinner fa-spin"></i> Checking...'
-        : '<i class="fas fa-magnifying-glass"></i> Check offer';
+    btn.innerHTML = busy ? '<i class="fas fa-spinner fa-spin"></i> Checking...' : (btn.dataset.label || btn.innerHTML);
 }
 
 function showReport(entry) {
@@ -234,15 +302,17 @@ function showReport(entry) {
     area.innerHTML = '';
     const wrap = document.createElement('div');
     wrap.className = 'report-wrap';
-    wrap.innerHTML = renderDecoderReport(normalizeReport(entry.report));
+    const isPost = entry.kind === 'post';
+    const report = isPost ? normalizePostReport(entry.report) : normalizeReport(entry.report);
+    wrap.innerHTML = isPost ? renderPostReport(report) : renderDecoderReport(report);
     const actions = document.createElement('div');
     actions.className = 'report-actions';
     actions.innerHTML = '<button class="msg-action-btn" type="button"><i class="fas fa-copy"></i> Copy report</button>';
     actions.firstChild.addEventListener('click', () =>
-        copyTextToClipboard(reportToMarkdown(normalizeReport(entry.report)), 'Report copied!'));
+        copyTextToClipboard(isPost ? postToMarkdown(report) : reportToMarkdown(report), 'Report copied!'));
     wrap.appendChild(actions);
     area.appendChild(wrap);
-    bindDecoderReportActions(wrap, normalizeReport(entry.report));
+    if (isPost) bindPostReportActions(wrap, report); else bindDecoderReportActions(wrap, report);
     wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -256,16 +326,17 @@ function renderHistory() {
     list.innerHTML = '';
 
     State.reports.forEach(entry => {
-        const rawRisk = entry.report && entry.report.overall_risk;
+        const isPost = entry.kind === 'post';
+        const rawRisk = entry.report && (isPost ? entry.report.risk_level : entry.report.overall_risk);
         const risk = SEVERITY_ORDER.hasOwnProperty(rawRisk) ? rawRisk : 'medium';
         const row = document.createElement('div');
         row.className = 'history-item';
         row.innerHTML = `
             <div class="history-main">
                 <strong>${escapeHtml(entry.title)}</strong>
-                <span class="sub">offer letter · ${escapeHtml(new Date(entry.createdAt).toLocaleString())}</span>
+                <span class="sub">${isPost ? 'job post' : 'offer letter'} · ${escapeHtml(new Date(entry.createdAt).toLocaleString())}</span>
             </div>
-            <span class="risk-badge risk-${risk}">${risk}</span>
+            <span class="risk-badge risk-${risk}">${isPost ? `${entry.report.score}/100` : risk}</span>
             <button class="history-del" type="button" title="Delete"><i class="fas fa-trash-alt"></i></button>`;
         row.addEventListener('click', () => showReport(entry));
         row.querySelector('.history-del').addEventListener('click', e => {
@@ -293,7 +364,6 @@ function normalizeAuthenticity(raw) {
     const riskLevel = SEVERITY_ORDER.hasOwnProperty(raw.risk_level) ? raw.risk_level
         : (LEGACY_VERDICTS[raw.verdict] || 'medium');
     const score = Math.max(0, Math.min(100, Math.round(Number(raw.score)) || 0));
-    const weights = ['high', 'medium', 'low'];
     return {
         score: score,
         risk_level: riskLevel,
@@ -302,34 +372,215 @@ function normalizeAuthenticity(raw) {
         company: str(raw.company),
         limits: str(raw.limits),
         checklist: list(raw.checklist).map(str).filter(Boolean),
-        checks: list(raw.checks)
-            .filter(c => c && typeof c === 'object')
-            .map(c => ({
-                name: str(c.name),
-                status: ['ok', 'warn', 'unavailable', 'skipped'].includes(c.status) ? c.status : 'unavailable',
-                detail: str(c.detail)
-            })),
-        signals: list(raw.signals)
-            .filter(s => s && typeof s === 'object')
-            .map(s => ({
-                id: str(s.id),
-                polarity: s.polarity === 'positive' ? 'positive' : 'negative',
-                weight: weights.includes(s.weight) ? s.weight : 'low',
-                label: str(s.label),
-                explanation: str(s.explanation),
-                evidence: str(s.evidence),
-                evidence_verified: s.evidence_verified !== false,
-                counted: s.counted !== false,
-                sources: list(s.sources)
-                    .filter(src => src && typeof src === 'object' && /^https?:\/\//i.test(str(src.url)))
-                    .slice(0, 5)
-                    .map(src => ({ title: str(src.title) || str(src.url), url: str(src.url) }))
-            }))
+        checks: normalizeChecks(raw.checks),
+        signals: normalizeSignals(raw.signals)
+    };
+}
+
+const safeStr = v => (typeof v === 'string' ? v : '');
+const safeList = v => (Array.isArray(v) ? v : []);
+
+function normalizeChecks(raw) {
+    return safeList(raw)
+        .filter(c => c && typeof c === 'object')
+        .map(c => ({
+            name: safeStr(c.name),
+            status: ['ok', 'warn', 'unavailable', 'skipped'].includes(c.status) ? c.status : 'unavailable',
+            detail: safeStr(c.detail)
+        }));
+}
+
+function normalizeSignals(raw) {
+    const weights = ['high', 'medium', 'low'];
+    return safeList(raw)
+        .filter(s => s && typeof s === 'object')
+        .map(s => ({
+            id: safeStr(s.id),
+            polarity: s.polarity === 'positive' ? 'positive' : 'negative',
+            weight: weights.includes(s.weight) ? s.weight : 'low',
+            label: safeStr(s.label),
+            explanation: safeStr(s.explanation),
+            evidence: safeStr(s.evidence),
+            evidence_verified: s.evidence_verified !== false,
+            counted: s.counted !== false,
+            not_counted_reason: safeStr(s.not_counted_reason),
+            sources: safeList(s.sources)
+                .filter(src => src && typeof src === 'object' && /^https?:\/\//i.test(safeStr(src.url)))
+                .slice(0, 5)
+                .map(src => ({ title: safeStr(src.title) || safeStr(src.url), url: safeStr(src.url) }))
+        }));
+}
+
+// Coerce a job-post report (from the server or localStorage) into a safe, known shape.
+function normalizePostReport(raw) {
+    const r = raw && typeof raw === 'object' ? raw : {};
+    const it = r.internship_type && typeof r.internship_type === 'object' ? r.internship_type : {};
+    const meta = r.meta && typeof r.meta === 'object' ? r.meta : {};
+    const riskLevel = SEVERITY_ORDER.hasOwnProperty(r.risk_level) ? r.risk_level : 'medium';
+    return {
+        score: Math.max(0, Math.min(100, Math.round(Number(r.score)) || 0)),
+        risk_level: riskLevel,
+        risk_label: safeStr(r.risk_label) || RISK_LABELS[riskLevel],
+        confidence: ['low', 'medium', 'high'].includes(r.confidence) ? r.confidence : 'low',
+        company: safeStr(r.company),
+        role: safeStr(r.role),
+        internship_type: {
+            label: safeStr(it.label) || 'unclear',
+            display: safeStr(it.display) || 'Unclear',
+            verified: it.verified !== false,
+            quotes: safeList(it.quotes)
+                .filter(q => q && typeof q === 'object' && safeStr(q.text))
+                .map(q => ({ text: safeStr(q.text), verified: q.verified !== false }))
+        },
+        signals: normalizeSignals(r.signals),
+        checks: normalizeChecks(r.checks),
+        questions: safeList(r.questions).map(safeStr).filter(Boolean),
+        checklist: safeList(r.checklist).map(safeStr).filter(Boolean),
+        limits: safeStr(r.limits),
+        meta: { source: safeStr(meta.source), host: safeStr(meta.host), characters: Number(meta.characters) || 0 }
     };
 }
 
 function sourceHost(url) {
     try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return ''; }
+}
+
+// One evidence row per signal. `where` names the text quotes were checked against.
+function renderSignals(list, where) {
+    return list.map(s => `
+        <div class="auth-signal ${s.polarity}${s.counted ? '' : ' not-scored'}">
+            <div class="auth-signal-head">
+                <i class="fas ${s.polarity === 'positive' ? 'fa-circle-plus' : 'fa-circle-minus'}"></i>
+                <strong>${escapeHtml(s.label)}</strong>
+                <span class="sev-pill sev-${s.polarity === 'positive' ? 'low' : s.weight}">${s.polarity === 'positive' ? 'good sign' : s.weight + ' risk'}</span>
+                ${s.counted ? '' : `<span class="quote-unverified" title="This did not change the score."><i class="fas fa-circle-question"></i> ${escapeHtml(s.not_counted_reason || `Not counted: evidence not found in your ${where}`)}</span>`}
+            </div>
+            ${s.explanation ? `<p>${escapeHtml(s.explanation)}</p>` : ''}
+            ${s.evidence ? `<blockquote class="clause-quote"><mark>${escapeHtml(s.evidence)}</mark></blockquote>` : ''}
+            ${s.sources.length ? `
+            <ul class="auth-sources">${s.sources.map(src => `
+                <li><i class="fas fa-arrow-up-right-from-square"></i>
+                    <a href="${escapeHtml(src.url)}" rel="noopener noreferrer nofollow">${escapeHtml(src.title)}</a>
+                    <span class="auth-source-host">${escapeHtml(sourceHost(src.url))}</span></li>`).join('')}
+            </ul>` : ''}
+        </div>`).join('');
+}
+
+function renderChecks(checks) {
+    const icons = { ok: 'fa-circle-check', warn: 'fa-triangle-exclamation', unavailable: 'fa-circle-question', skipped: 'fa-circle-minus' };
+    return checks.length ? `
+        <div class="auth-group">
+            <div class="auth-group-title">What we checked online</div>
+            <ul class="auth-checks">${checks.map(c => `
+                <li class="check-${c.status}">
+                    <i class="fas ${icons[c.status]}"></i>
+                    <span><strong>${escapeHtml(c.name)}</strong>${c.detail ? ` · ${escapeHtml(c.detail)}` : ''}</span>
+                </li>`).join('')}
+            </ul>
+        </div>` : '';
+}
+
+const CONFIDENCE_TEXT = {
+    high: 'High confidence: plenty of evidence from the post and online checks',
+    medium: 'Medium confidence: some evidence, so verify the rest yourself',
+    low: 'Low confidence: little evidence either way (add the company name and website)'
+};
+
+function renderPostReport(r) {
+    const verdictIcons = { low: 'fa-circle-check', medium: 'fa-circle-question', high: 'fa-triangle-exclamation' };
+    const red = r.signals.filter(s => s.polarity === 'negative');
+    const good = r.signals.filter(s => s.polarity === 'positive');
+    const it = r.internship_type;
+    const typeHtml = `
+        <div class="auth-group type-block">
+            <div class="auth-group-title">Internship type</div>
+            <p class="type-label"><span class="type-chip type-${escapeHtml(it.label)}">${escapeHtml(it.display)}</span>
+            ${it.verified ? '' : '<span class="quote-unverified"><i class="fas fa-circle-question"></i> The lines behind this label weren\'t found in the post, so it isn\'t used</span>'}</p>
+            ${it.quotes.map(q => `<blockquote class="clause-quote"><mark>${escapeHtml(q.text)}</mark>${q.verified ? '' : ' <span class="quote-unverified">(not found in the post)</span>'}</blockquote>`).join('')}
+        </div>`;
+    const questionsHtml = r.questions.length ? `
+        <div class="auth-group">
+            <div class="decoder-card-head">
+                <div class="auth-group-title">Questions to ask before you apply</div>
+                <button class="msg-action-btn post-questions-copy" type="button"><i class="fas fa-copy"></i> Copy</button>
+            </div>
+            <ol class="question-list">${r.questions.map(q => `<li><span>${escapeHtml(q)}</span></li>`).join('')}</ol>
+        </div>` : '';
+    const checklistHtml = r.checklist.length ? `
+        <div class="auth-group">
+            <div class="decoder-card-head">
+                <div class="auth-group-title">Verify it yourself</div>
+                <button class="msg-action-btn post-checklist-copy" type="button"><i class="fas fa-copy"></i> Copy</button>
+            </div>
+            <ol class="question-list">${r.checklist.map(c => `<li><span>${escapeHtml(c)}</span></li>`).join('')}</ol>
+        </div>` : '';
+    const subject = [r.role, r.company].filter(Boolean).join(' · ');
+    const metaBits = [];
+    if (r.meta.source === 'link' && r.meta.host) metaBits.push(`read from ${escapeHtml(r.meta.host)}`);
+    if (r.meta.characters) metaBits.push(`${r.meta.characters.toLocaleString()} characters`);
+
+    const html = `
+        <div class="decoder-report">
+            <div class="decoder-report-header">
+                <div class="decoder-report-title">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <span>Job post check${subject ? ` · ${escapeHtml(subject)}` : ''}</span>
+                </div>
+            </div>
+            <div class="decoder-card auth-card verdict-${r.risk_level}">
+                <div class="auth-top">
+                    <div class="trust-ring" style="--pct:${r.score}" role="img" aria-label="Trust score ${r.score} out of 100">
+                        <div class="trust-ring-inner"><strong>${r.score}</strong><span>/100</span></div>
+                    </div>
+                    <div class="auth-top-text">
+                        <h4><i class="fas fa-user-shield"></i> Internship trust score</h4>
+                        <span class="risk-badge risk-${r.risk_level}"><i class="fas ${verdictIcons[r.risk_level]}"></i> ${escapeHtml(r.risk_label)}</span>
+                        <p class="auth-meta">${escapeHtml(CONFIDENCE_TEXT[r.confidence])}</p>
+                    </div>
+                </div>
+                ${typeHtml}
+                ${red.length ? `<div class="auth-group"><div class="auth-group-title">Warning signs <span class="decoder-count">${red.length}</span></div>${renderSignals(red, 'post')}</div>` : ''}
+                ${good.length ? `<div class="auth-group"><div class="auth-group-title">Good signs <span class="decoder-count">${good.length}</span></div>${renderSignals(good, 'post')}</div>` : ''}
+                ${!red.length && !good.length ? '<p class="decoder-empty">No clear signals either way were found in the post.</p>' : ''}
+                ${renderChecks(r.checks)}
+                ${questionsHtml}
+                ${checklistHtml}
+                <p class="auth-limits"><i class="fas fa-circle-info"></i> ${escapeHtml(r.limits)}</p>
+            </div>
+            ${metaBits.length ? `<span class="decoder-meta">${metaBits.join(' • ')}</span>` : ''}
+        </div>`;
+    return typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(html) : html;
+}
+
+function bindPostReportActions(row, report) {
+    const bind = (selector, items, message) => {
+        const btn = row.querySelector(selector);
+        if (btn) btn.addEventListener('click', () =>
+            copyTextToClipboard(items.map((x, i) => `${i + 1}. ${x}`).join('\n'), message));
+    };
+    bind('.post-questions-copy', report.questions, 'Questions copied!');
+    bind('.post-checklist-copy', report.checklist, 'Checklist copied!');
+}
+
+function postToMarkdown(r) {
+    const lines = [`## ${window.BRAND_NAME || 'NibbleContract AI'}: job post check`];
+    const subject = [r.role, r.company].filter(Boolean).join(' · ');
+    if (subject) lines.push(subject);
+    lines.push('', `**Internship trust score:** ${r.score}/100 (${r.risk_label})`, `**Internship type:** ${r.internship_type.display}`, '');
+    r.signals.forEach(s => {
+        lines.push(`- ${s.polarity === 'positive' ? '[good]' : '[warning]'} ${s.label}${s.evidence ? `: "${s.evidence}"` : ''}${s.counted ? '' : ' _(not counted)_'}`);
+        s.sources.forEach(src => lines.push(`  - Source: ${src.title} (${src.url})`));
+    });
+    if (r.checks.length) {
+        lines.push('', '**Checked online:**');
+        r.checks.forEach(c => lines.push(`- ${c.name} (${c.status})${c.detail ? `: ${c.detail}` : ''}`));
+    }
+    lines.push('', '**Questions to ask before you apply:**');
+    r.questions.forEach((q, i) => lines.push(`${i + 1}. ${q}`));
+    lines.push('', '**Verify it yourself:**');
+    r.checklist.forEach((c, i) => lines.push(`${i + 1}. ${c}`));
+    lines.push('', `_${r.limits}_`);
+    return lines.join('\n');
 }
 
 function renderAuthenticity(report) {
@@ -342,35 +593,8 @@ function renderAuthenticity(report) {
     const cls = au.risk_level;
     const verdictIcons = { low: 'fa-circle-check', medium: 'fa-circle-question', high: 'fa-triangle-exclamation' };
 
-    const signalHtml = list => list.map(s => `
-        <div class="auth-signal ${s.polarity}${s.counted ? '' : ' not-scored'}">
-            <div class="auth-signal-head">
-                <i class="fas ${s.polarity === 'positive' ? 'fa-circle-plus' : 'fa-circle-minus'}"></i>
-                <strong>${escapeHtml(s.label)}</strong>
-                <span class="sev-pill sev-${s.polarity === 'positive' ? 'low' : s.weight}">${s.polarity === 'positive' ? 'good sign' : s.weight + ' risk'}</span>
-                ${s.counted ? '' : '<span class="quote-unverified" title="The quote could not be found in your document, so this did not change the score."><i class="fas fa-circle-question"></i> Not counted: evidence not found in your document</span>'}
-            </div>
-            ${s.explanation ? `<p>${escapeHtml(s.explanation)}</p>` : ''}
-            ${s.evidence ? `<blockquote class="clause-quote"><mark>${escapeHtml(s.evidence)}</mark></blockquote>` : ''}
-            ${s.sources.length ? `
-            <ul class="auth-sources">${s.sources.map(src => `
-                <li><i class="fas fa-arrow-up-right-from-square"></i>
-                    <a href="${escapeHtml(src.url)}" rel="noopener noreferrer nofollow">${escapeHtml(src.title)}</a>
-                    <span class="auth-source-host">${escapeHtml(sourceHost(src.url))}</span></li>`).join('')}
-            </ul>` : ''}
-        </div>`).join('');
-
-    const checkIcons = { ok: 'fa-circle-check', warn: 'fa-triangle-exclamation', unavailable: 'fa-circle-question', skipped: 'fa-circle-minus' };
-    const checksHtml = au.checks.length ? `
-        <div class="auth-group">
-            <div class="auth-group-title">What we checked online</div>
-            <ul class="auth-checks">${au.checks.map(c => `
-                <li class="check-${c.status}">
-                    <i class="fas ${checkIcons[c.status]}"></i>
-                    <span><strong>${escapeHtml(c.name)}</strong>${c.detail ? ` · ${escapeHtml(c.detail)}` : ''}</span>
-                </li>`).join('')}
-            </ul>
-        </div>` : '';
+    const signalHtml = list => renderSignals(list, 'document');
+    const checksHtml = renderChecks(au.checks);
 
     const red = au.signals.filter(s => s.polarity === 'negative');
     const good = au.signals.filter(s => s.polarity === 'positive');

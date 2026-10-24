@@ -581,5 +581,37 @@ a.brand { color: var(--text-main); }
   .example-label { width: 100%; }
 }
 
+/* ---- tool tabs ---- */
+.tool-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px; background: var(--bg-tertiary); border-radius: var(--radius-lg); }
+.tool-tab {
+  display: flex; align-items: center; gap: 12px; padding: 11px 14px; border: none; border-radius: 10px; cursor: pointer;
+  background: transparent; color: var(--text-muted); font: inherit; text-align: left;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.tool-tab > i { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: .85rem; }
+.tool-tab strong { display: block; font-size: .92rem; color: inherit; }
+.tool-tab small { display: block; font-size: .76rem; color: var(--text-dim); }
+.tool-tab:hover { color: var(--text-main); }
+.tool-tab.active { background: var(--bg-secondary); color: var(--text-main); box-shadow: var(--shadow-sm); }
+.tool-tab.active > i { background: var(--accent-soft); color: var(--accent-ink); }
+.tool-panel { border-radius: var(--radius-xl); padding: 22px; }
+.tool-panel[hidden] { display: none; }
+.link-row { margin: 12px 0 0; }
+.link-row .auth-input { flex: 1 1 320px; }
+
+/* ---- internship type ---- */
+.type-label { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 2px 0 4px; }
+.type-chip { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 6px; font-size: .82rem; font-weight: 600; background: var(--bg-tertiary); color: var(--text-main); }
+.type-chip.type-paid_internship { background: var(--risk-low-bg); color: var(--risk-low); }
+.type-chip.type-training_or_paid_course { background: var(--risk-high-bg); color: var(--risk-high); }
+.type-chip.type-unpaid_internship, .type-chip.type-agency_or_recruiter_post { background: var(--risk-medium-bg); color: var(--risk-medium); }
+.type-block blockquote.clause-quote { margin: 6px 0 0; }
+
+@media (max-width: 600px) {
+  .tool-panel { padding: 16px; }
+  .tool-tab { padding: 10px; gap: 8px; }
+  .tool-tab > i { display: none; }
+}
+
 /* Motion off (follows the OS "reduce motion" setting) */
 html[data-motion="off"] .report-wrap { animation: none; }

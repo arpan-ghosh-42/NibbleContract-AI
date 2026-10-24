@@ -6,6 +6,7 @@ import os
 
 import authenticity
 import decoder
+import job_post
 
 load_dotenv()
 
@@ -27,7 +28,7 @@ app.config["MAX_CONTENT_LENGTH"] = decoder.MAX_UPLOAD_BYTES + 1024 * 1024
 app.config["MAX_FORM_MEMORY_SIZE"] = 1024 * 1024
 #.\venv\Scripts\python.exe app.py
 
-MODEL = "openai/gpt-oss-120b"
+MODEL = (os.getenv("GROQ_MODEL") or "openai/gpt-oss-120b").strip()
 
 # Domain-age (RDAP) and website checks for internship offers. Set LIVE_LOOKUPS=0 to disable.
 LIVE_LOOKUPS = os.getenv("LIVE_LOOKUPS", "1") != "0"
@@ -70,6 +71,38 @@ def request_too_large(error):
     return jsonify({
         "error": "That upload is too large. Files must be under 5 MB."
     }), 413
+
+
+@app.route("/check-post", methods=["POST"])
+def check_post():
+    # Never log or persist the post itself; only sizes and outcomes.
+    try:
+        result = job_post.check_post(
+            groq_client, MODEL,
+            text=request.form.get("text", ""),
+            url=request.form.get("url", ""),
+            company_name=request.form.get("company_name", ""),
+            website=request.form.get("website", ""),
+            live_lookups=LIVE_LOOKUPS,
+            tavily_key=TAVILY_API_KEY,
+        )
+    except decoder.DecodeError as e:
+        return jsonify({"error": e.message}), e.status
+    except RateLimitError:
+        return jsonify({
+            "error": "The AI service is rate-limiting us right now. Wait a minute and try again."
+        }), 429
+    except Exception as e:
+        app.logger.warning("check-post failed: %s", type(e).__name__)
+        return jsonify({
+            "error": "Something went wrong while checking the post. Please try again."
+        }), 502
+
+    app.logger.info(
+        "check-post ok: source=%s chars=%d signals=%d score=%d",
+        result["meta"]["source"], result["meta"]["characters"], len(result["signals"]), result["score"],
+    )
+    return jsonify({"type": "job_post", "result": result})
 
 
 @app.route("/decode", methods=["POST"])
