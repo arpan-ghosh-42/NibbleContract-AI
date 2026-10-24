@@ -373,6 +373,7 @@ function normalizeAuthenticity(raw) {
         limits: str(raw.limits),
         checklist: list(raw.checklist).map(str).filter(Boolean),
         checks: normalizeChecks(raw.checks),
+        agents: normalizeAgents(raw.agents),
         signals: normalizeSignals(raw.signals)
     };
 }
@@ -434,6 +435,7 @@ function normalizePostReport(raw) {
         },
         signals: normalizeSignals(r.signals),
         checks: normalizeChecks(r.checks),
+        agents: normalizeAgents(r.agents),
         questions: safeList(r.questions).map(safeStr).filter(Boolean),
         checklist: safeList(r.checklist).map(safeStr).filter(Boolean),
         limits: safeStr(r.limits),
@@ -464,6 +466,114 @@ function renderSignals(list, where) {
                     <span class="auth-source-host">${escapeHtml(sourceHost(src.url))}</span></li>`).join('')}
             </ul>` : ''}
         </div>`).join('');
+}
+
+// Safe to run twice: reports are normalized when they arrive and again when shown from history.
+function normalizeAgents(raw) {
+    const statuses = ['done', 'skipped', 'unavailable'];
+    const httpUrl = u => /^https?:\/\//i.test(safeStr(u));
+    return safeList(raw)
+        .filter(a => a && typeof a === 'object' && safeStr(a.name))
+        .slice(0, 6)
+        .map(a => ({
+            id: safeStr(a.id),
+            name: safeStr(a.name),
+            role: safeStr(a.role),
+            status: statuses.includes(a.status) ? a.status : 'unavailable',
+            seconds: Math.max(0, a.duration_ms !== undefined ? (Number(a.duration_ms) || 0) / 1000 : Number(a.seconds) || 0),
+            tool_calls: Math.max(0, Math.round(Number(a.tool_calls)) || 0),
+            engines: safeList(a.engines).map(safeStr).filter(Boolean),
+            note: safeStr(a.note),
+            sources: safeList(a.sources)
+                .filter(s => s && typeof s === 'object' && httpUrl(s.url))
+                .slice(0, 10)
+                .map(s => ({ title: safeStr(s.title) || safeStr(s.url), url: safeStr(s.url) })),
+            findings: safeList(a.findings)
+                .filter(f => f && typeof f === 'object' && safeStr(f.claim))
+                .slice(0, 10)
+                .map(f => ({
+                    claim: safeStr(f.claim),
+                    stance: safeStr(f.stance),
+                    url: httpUrl(f.source_url) ? safeStr(f.source_url) : (httpUrl(f.url) ? safeStr(f.url) : ''),
+                    grounded: f.grounded !== false,
+                    counted: f.counted !== false && f.grounded !== false
+                }))
+        }));
+}
+
+const STANCE_LABELS = {
+    scam_report: 'fraud claim', impersonation_warning: 'fake-offer warning', complaint: 'complaint',
+    positive: 'positive', neutral: 'neutral', funding_round: 'funding', not_funding: 'not funding',
+    ok: 'ok', warn: 'concern', unavailable: 'unavailable', skipped: 'skipped'
+};
+const STANCE_TONE = {
+    scam_report: 'high', impersonation_warning: 'medium', complaint: 'medium', warn: 'high',
+    positive: 'low', funding_round: 'low', ok: 'low'
+};
+
+// The agent research panel: a small Gantt chart of what ran, for how long, and what each agent used.
+function renderAgents(agents) {
+    if (!agents.length) return '';
+    const analyst = agents.find(a => a.id === 'post_analyst');
+    const research = agents.filter(a => a !== analyst);
+    const offset = analyst ? analyst.seconds : 0;   // research agents start once the analyst is done
+    const slowest = Math.max(0, ...research.filter(a => a.status !== 'skipped').map(a => a.seconds));
+    const total = offset + slowest || 1;
+    const icons = { done: 'fa-circle-check', skipped: 'fa-circle-minus', unavailable: 'fa-circle-exclamation' };
+    const statusText = { done: 'done', skipped: 'skipped', unavailable: 'unavailable' };
+    const ran = research.filter(a => a.status !== 'skipped').length;
+
+    const rows = agents.map(a => {
+        const start = a === analyst ? 0 : offset;
+        const width = a.status === 'skipped' ? 0 : Math.max(1.5, (a.seconds / total) * 100);
+        const meta = [];
+        if (a.status !== 'skipped') meta.push(`${a.seconds.toFixed(1)}s`);
+        if (a.tool_calls) meta.push(`${a.tool_calls} tool call${a.tool_calls === 1 ? '' : 's'}`);
+        if (a.sources.length) meta.push(`${a.sources.length} source${a.sources.length === 1 ? '' : 's'}`);
+        if (a.engines.length) meta.push(a.engines.map(e => e === 'duckduckgo' ? 'DuckDuckGo' : e === 'tavily' ? 'Tavily' : e).join(' + '));
+        const findings = a.findings.length ? `
+            <ul class="agent-findings">${a.findings.map(f => `
+                <li>
+                    <span class="stance-pill tone-${STANCE_TONE[f.stance] || 'none'}">${escapeHtml(STANCE_LABELS[f.stance] || f.stance || 'finding')}</span>
+                    <span class="agent-claim">${escapeHtml(f.claim)}</span>
+                    ${!f.grounded ? '<span class="quote-unverified"><i class="fas fa-circle-question"></i> unverified: no tool returned this link, not counted</span>'
+                      : !f.counted ? '<span class="quote-unverified">not counted</span>' : ''}
+                    ${f.url ? `<a class="agent-link" href="${escapeHtml(f.url)}" rel="noopener noreferrer nofollow">${escapeHtml(sourceHost(f.url) || 'source')}</a>` : ''}
+                </li>`).join('')}
+            </ul>` : '';
+        const sources = a.sources.length ? `
+            <ul class="auth-sources">${a.sources.map(src => `
+                <li><i class="fas fa-arrow-up-right-from-square"></i>
+                    <a href="${escapeHtml(src.url)}" rel="noopener noreferrer nofollow">${escapeHtml(src.title)}</a>
+                    <span class="auth-source-host">${escapeHtml(sourceHost(src.url))}</span></li>`).join('')}
+            </ul>` : '';
+        const hasDetail = a.note || findings || sources;
+        const head = `
+            <span class="agent-status status-${a.status}" title="${statusText[a.status]}"><i class="fas ${icons[a.status]}"></i></span>
+            <span class="agent-name"><strong>${escapeHtml(a.name)}</strong><small>${escapeHtml(a.role)}</small></span>
+            <span class="agent-track" aria-hidden="true"><span class="agent-bar status-${a.status}" style="left:${start / total * 100}%;width:${width}%"></span></span>
+            <span class="agent-meta">${a.status === 'skipped' ? 'skipped' : a.status === 'unavailable' ? `unavailable · ${meta.join(' · ')}` : meta.join(' · ')}</span>
+            ${hasDetail ? '<i class="fas fa-chevron-down agent-chevron" aria-hidden="true"></i>' : ''}`;
+        return hasDetail ? `
+            <details class="agent-row">
+                <summary>${head}</summary>
+                <div class="agent-detail">
+                    ${a.note ? `<p class="agent-note">${escapeHtml(a.note)}</p>` : ''}
+                    ${findings}
+                    ${sources ? `<div class="agent-sources-title">Sources the tools returned</div>${sources}` : ''}
+                </div>
+            </details>` : `<div class="agent-row"><div class="agent-summary">${head}</div></div>`;
+    }).join('');
+
+    return `
+        <div class="auth-group agent-panel">
+            <div class="agent-panel-head">
+                <div class="auth-group-title"><i class="fas fa-diagram-project"></i> Research agents</div>
+                <span class="agent-total">${total.toFixed(1)}s total${ran > 1 ? ` · ${ran} agents ran in parallel` : ''}</span>
+            </div>
+            <div class="agent-list">${rows}</div>
+            <p class="hint">Agents only gather evidence. The score comes from fixed rules, and a finding only counts when its source is a link a tool actually returned.</p>
+        </div>`;
 }
 
 function renderChecks(checks) {
@@ -543,6 +653,7 @@ function renderPostReport(r) {
                 ${good.length ? `<div class="auth-group"><div class="auth-group-title">Good signs <span class="decoder-count">${good.length}</span></div>${renderSignals(good, 'post')}</div>` : ''}
                 ${!red.length && !good.length ? '<p class="decoder-empty">No clear signals either way were found in the post.</p>' : ''}
                 ${renderChecks(r.checks)}
+                ${renderAgents(r.agents)}
                 ${questionsHtml}
                 ${checklistHtml}
                 <p class="auth-limits"><i class="fas fa-circle-info"></i> ${escapeHtml(r.limits)}</p>
@@ -574,6 +685,10 @@ function postToMarkdown(r) {
     if (r.checks.length) {
         lines.push('', '**Checked online:**');
         r.checks.forEach(c => lines.push(`- ${c.name} (${c.status})${c.detail ? `: ${c.detail}` : ''}`));
+    }
+    if (r.agents.length) {
+        lines.push('', '**Research agents:**');
+        r.agents.forEach(a => lines.push(`- ${a.name}: ${a.status}${a.status === 'skipped' ? '' : ` in ${a.seconds.toFixed(1)}s`}${a.note ? ` (${a.note})` : ''}`));
     }
     lines.push('', '**Questions to ask before you apply:**');
     r.questions.forEach((q, i) => lines.push(`${i + 1}. ${q}`));
@@ -618,6 +733,7 @@ function renderAuthenticity(report) {
             ${good.length ? `<div class="auth-group"><div class="auth-group-title">Good signs <span class="decoder-count">${good.length}</span></div>${signalHtml(good)}</div>` : ''}
             ${!red.length && !good.length ? '<p class="decoder-empty">No clear signals either way were found in the text.</p>' : ''}
             ${checksHtml}
+            ${renderAgents(au.agents)}
             ${checklistHtml ? `
             <div class="auth-group">
                 <div class="decoder-card-head">

@@ -607,7 +607,56 @@ a.brand { color: var(--text-main); }
 .type-chip.type-unpaid_internship, .type-chip.type-agency_or_recruiter_post { background: var(--risk-medium-bg); color: var(--risk-medium); }
 .type-block blockquote.clause-quote { margin: 6px 0 0; }
 
+/* ---- agent research panel ---- */
+.agent-panel { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle); }
+.agent-panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.agent-panel-head .auth-group-title i { color: var(--accent); }
+.agent-total { font-size: .76rem; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.agent-list { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden; background: var(--bg-glass); }
+.agent-row + .agent-row { border-top: 1px solid var(--border-subtle); }
+.agent-row > summary, .agent-summary {
+  display: grid; grid-template-columns: 22px minmax(150px, 1.1fr) minmax(90px, 1fr) auto 14px; align-items: center; gap: 12px;
+  padding: 10px 12px; list-style: none;
+}
+.agent-row > summary { cursor: pointer; }
+.agent-row > summary::-webkit-details-marker { display: none; }
+.agent-row > summary:hover { background: var(--bg-glass-active); }
+.agent-status { font-size: .95rem; }
+.agent-status.status-done { color: var(--risk-low); }
+.agent-status.status-skipped { color: var(--text-dim); }
+.agent-status.status-unavailable { color: var(--risk-medium); }
+.agent-name { min-width: 0; }
+.agent-name strong { display: block; font-size: .86rem; }
+.agent-name small { display: block; font-size: .72rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agent-track { position: relative; height: 8px; border-radius: 4px; background: var(--bg-tertiary); overflow: hidden; }
+.agent-bar { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--accent); }
+.agent-bar.status-unavailable { background: var(--risk-medium); opacity: .7; }
+.agent-meta { font-size: .74rem; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.agent-chevron { font-size: .7rem; color: var(--text-dim); transition: transform var(--transition-fast); }
+.agent-row[open] .agent-chevron { transform: rotate(180deg); }
+.agent-detail { padding: 2px 12px 12px 46px; }
+.agent-note { font-size: .8rem; color: var(--text-muted); margin-bottom: 6px; }
+.agent-findings { list-style: none; display: flex; flex-direction: column; gap: 6px; margin: 6px 0; }
+.agent-findings li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: .8rem; }
+.agent-claim { color: var(--text-main); }
+.agent-link { color: var(--accent-ink); font-size: .74rem; text-decoration: none; }
+.agent-link:hover { text-decoration: underline; }
+.stance-pill { font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 1px 7px; border-radius: 5px; background: var(--bg-tertiary); color: var(--text-muted); white-space: nowrap; }
+.stance-pill.tone-high { background: var(--risk-high-bg); color: var(--risk-high); }
+.stance-pill.tone-medium { background: var(--risk-medium-bg); color: var(--risk-medium); }
+.stance-pill.tone-low { background: var(--risk-low-bg); color: var(--risk-low); }
+.agent-sources-title { font-size: .72rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: .05em; margin-top: 8px; }
+.agent-panel > .hint { margin-top: 8px; }
+
 @media (max-width: 600px) {
+  /* Stack on phones: name, then timing, then the bar. */
+  .agent-row > summary, .agent-summary { grid-template-columns: 20px 1fr 12px; gap: 4px 8px; }
+  .agent-status { grid-column: 1; grid-row: 1; }
+  .agent-name { grid-column: 2; grid-row: 1; }
+  .agent-chevron { grid-column: 3; grid-row: 1; }
+  .agent-meta { grid-column: 2 / -1; grid-row: 2; white-space: normal; }
+  .agent-track { grid-column: 2 / -1; grid-row: 3; }
+  .agent-detail { padding-left: 12px; }
   .tool-panel { padding: 16px; }
   .tool-tab { padding: 10px; gap: 8px; }
   .tool-tab > i { display: none; }
