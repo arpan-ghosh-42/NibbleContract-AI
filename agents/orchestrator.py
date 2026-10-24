@@ -168,6 +168,13 @@ def research(client, model, text, company, website, sender_email="", role="", li
             log.warning("agent %s unavailable: %s %s", key, type(e).__name__, str(e)[:200])
     pool.shutdown(wait=False, cancel_futures=True)   # a timed-out agent finishes in the background and is ignored
 
+    # Fallbacks for stopped agents, company first: its domain and website checks are the core evidence.
+    fallback = {}
+    for key in sorted(failures, key=lambda k: k != "company"):
+        fallback[key] = _fallback_for(key, failures[key], started, recorders[key], client, model, company, tavily_key,
+                                      domains, site_target, words, joined, contact_domain, fallback_checks,
+                                      fallback_reviews)
+
     signals, checks, trace = [], [], []
     for key in AGENTS:
         rec = recorders[key]
@@ -175,8 +182,7 @@ def research(client, model, text, company, website, sender_email="", role="", li
             trace.append(_trace(key, "skipped", note=skipped[key]))
             continue
         if key in failures:
-            sigs, chks, note = _fallback_for(key, failures[key], started, client, model, company, tavily_key, domains,
-                                             site_target, words, joined, contact_domain, fallback_checks, fallback_reviews)
+            sigs, chks, note = fallback[key]
             signals += sigs
             checks += chks
             trace.append(_trace(key, "unavailable", seconds[key], rec, note))
@@ -215,22 +221,44 @@ def research(client, model, text, company, website, sender_email="", role="", li
     return result
 
 
-def _fallback_for(key, reason, started, client, model, company, tavily_key, domains, site_target, words, joined,
-                  contact_domain, fallback_checks, fallback_reviews):
-    """The non-agent check for one failed agent, if the research budget allows. Returns (signals, checks, note)."""
+def _fallback_for(key, reason, started, recorder, client, model, company, tavily_key, domains, site_target, words,
+                  joined, contact_domain, fallback_checks, fallback_reviews):
+    """The non-agent check for one stopped agent. Returns (signals, checks, note)."""
+    if key == "company":
+        return _company_fallback(reason, recorder, domains, site_target, words, joined, contact_domain, fallback_checks)
     left = started + RESEARCH_BUDGET - time.time()
     if left < 3:
         return [], [], f"The agent stopped because {reason}, and there was no time left for the standard check."
     try:
-        if key == "company":
-            sigs, chks = fallback_checks(domains, site_target, words, joined, contact_domain)
-            return list(sigs), list(chks), f"The agent stopped because {reason}; the standard domain and website checks ran instead."
         if key == "reputation" and tavily_key:
             sigs, chk = fallback_reviews(client, model, company, tavily_key)
             return list(sigs), [chk], f"The agent stopped because {reason}; the standard web search ran instead."
     except Exception:
         return [], [], f"The agent stopped because {reason}, and the standard check failed too."
     return [], [], f"The agent stopped because {reason}."
+
+
+def _company_fallback(reason, recorder, domains, site_target, words, joined, contact_domain, fallback_checks):
+    """Keep the checks the agent's tools finished (plain code, so already grounded) and run whatever is missing.
+
+    Never skipped for lack of time: whether the domain and website exist is the evidence that matters most, and
+    the lookups carry their own network timeouts.
+    """
+    kept_signals, kept_checks = list(recorder.signals), list(recorder.checks)
+    names = {c["name"] for c in kept_checks}
+    missing = any(f"Domain registration: {d}" not in names for d in domains[:2]) or (
+        bool(site_target) and not any(n.startswith("Website:") for n in names))
+    if not missing:
+        return kept_signals, kept_checks, f"The agent stopped because {reason}; the checks its tools had finished were kept."
+    try:
+        sigs, chks = fallback_checks(domains, site_target, words, joined, contact_domain)
+    except Exception:
+        return kept_signals, kept_checks, f"The agent stopped because {reason}, and the standard checks failed too."
+    # The standard checks cover domain and website; keep the careers-page result if the agent got that far.
+    careers = [c for c in kept_checks if c["name"] == "Careers page"]
+    careers_signals = [s for s in kept_signals if s["id"] == "careers_lists_role"]
+    return (list(sigs) + careers_signals, list(chks) + careers,
+            f"The agent stopped because {reason}; the standard domain and website checks ran instead.")
 
 
 def _fallback_only(client, model, company, tavily_key, domains, site_target, words, joined, contact_domain,

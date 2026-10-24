@@ -157,3 +157,38 @@ def test_results_are_cached_per_company(monkeypatch, no_models):
     second = research()
     assert len(runs) == 1
     assert all("cached" in a["note"] for a in second["agents"])
+
+
+# Regression: on the live site a made-up company scored Low risk because a timed-out company agent's finished
+# checks were thrown away and the domain fallback was skipped for lack of time.
+
+class CheckingAgent(FakeAgent):
+    """A company agent whose tools finish their checks, then the agent hangs past its time limit."""
+
+    def run(self, prompt):
+        self.recorder.add_check([signal("domain_unregistered", weight="high")],
+                                {"name": "Domain registration: acmelabs.com", "status": "warn", "detail": "not registered"})
+        self.recorder.add_check([], {"name": "Website: acmelabs.com", "status": "warn", "detail": "does not resolve"})
+        return super().run(prompt)
+
+
+def test_a_timed_out_company_agent_keeps_the_checks_its_tools_finished(monkeypatch, no_models):
+    monkeypatch.setattr(orchestrator, "AGENT_TIMEOUT", 0.3)
+    patch_agents(monkeypatch, reputation=lambda rec: FakeAgent(rec), funding=lambda rec: FakeAgent(rec),
+                 company=lambda rec: CheckingAgent(rec, delay=2.0))
+    out = research(run_checks=lambda *a: pytest.fail("finished checks must not be redone"))
+    assert status_of(out, "company") == "unavailable"
+    assert any(s["id"] == "domain_unregistered" for s in out["signals"])
+
+
+def test_domain_checks_still_run_when_the_research_budget_is_spent(monkeypatch, no_models):
+    monkeypatch.setattr(orchestrator, "AGENT_TIMEOUT", 0.3)
+    monkeypatch.setattr(orchestrator, "RESEARCH_BUDGET", 0.1)
+    patch_agents(monkeypatch, reputation=lambda rec: FakeAgent(rec, error=RuntimeError("rate limited")),
+                 funding=lambda rec: FakeAgent(rec), company=lambda rec: FakeAgent(rec, delay=2.0))
+    unregistered = ([signal("domain_unregistered", weight="high")],
+                    [{"name": "Domain registration: acmelabs.com", "status": "warn", "detail": "not registered"}])
+    out = research(run_checks=lambda *a: unregistered,
+                   run_reviews=lambda *a: pytest.fail("no time left for the search fallback"))
+    assert any(s["id"] == "domain_unregistered" for s in out["signals"])
+    assert "standard domain and website checks ran" in next(a for a in out["agents"] if a["id"] == "company")["note"]
