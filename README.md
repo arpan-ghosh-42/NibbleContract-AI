@@ -1,8 +1,8 @@
 # NibbleContract AI
 
-> Read it before you sign it.
+> Check the internship before you apply, and the offer before you sign.
 
-Paste text or upload a PDF/.txt of a rental agreement, internship offer, scholarship terms, loan paperwork, or any contract, and get a plain-language risk report.
+Paste or upload (PDF/.txt) an internship offer letter and get a 0 to 100 trust score with the evidence behind it, plus a plain-language review of the terms.
 
 ## What you get
 
@@ -13,7 +13,7 @@ Paste text or upload a PDF/.txt of a rental agreement, internship offer, scholar
 
 ## Internship authenticity check
 
-When the document type is **Internship offer**, the report also includes a **trust score from 0 to 100** with a verdict (*looks consistent with a genuine offer*, *uncertain*, or *high scam risk*). You can optionally enter the sender email, company name and official website to sharpen the check.
+Every report includes a **trust score from 0 to 100** with a risk level (*Low*, *Medium* or *High risk*, for example "High risk: 3 warning signs found"). The report shows evidence and never labels a company a scam. You can optionally enter the sender email, company name and official website to sharpen the check.
 
 How the score works (see `authenticity.py`):
 
@@ -53,11 +53,11 @@ python app.py
 
 Open http://127.0.0.1:5001 for the landing page, or go straight to the tool at http://127.0.0.1:5001/app.
 
-No document handy? The tool has **fictional example** buttons (an obvious scam offer, a polished fake offer, and a lease with bad clauses), and the landing page links to them directly: `/app?example=scam`, `/app?example=fake`, `/app?example=lease`.
+No document handy? The tool has **fictional example** buttons (an offer with obvious warning signs and a polished offer from a made-up company), and the landing page links to them directly: `/app?example=scam`, `/app?example=fake`.
 
 ## How it works
 
-- `POST /decode` takes a multipart form: `doc_type` (rental, internship_offer, scholarship, loan, other) plus either `text` or a `file`.
+- `POST /decode` takes a multipart form with either `text` or a `file`, plus optional `sender_email`, `company_name` and `website`.
 - `decoder.py` extracts PDF text (pypdf), rejects files over 5 MB / 80 pages / 60,000 characters, and handles scanned PDFs with a friendly message.
 - The Groq model acts as a skeptical reviewer and must return JSON. Output is repaired and retried once if invalid. Long documents are chunked and merged.
 - Every quoted clause is checked against the source text; quotes that can't be found are marked as unverified.

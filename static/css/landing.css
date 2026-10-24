@@ -91,7 +91,6 @@ body.lp { overflow-x: hidden; }
 
 /* ---- sections ---- */
 .lp-section { max-width: 1120px; margin: 0 auto; padding: 96px 20px 0; }
-.lp-section-tight { padding-top: 72px; }
 .lp-head { text-align: center; max-width: 660px; margin: 0 auto 44px; }
 .lp-tag { display: inline-block; font-size: .76rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-ink); margin-bottom: 12px; }
 .lp-head h2, .lp-honest h2 { font-family: var(--font-heading); font-weight: 600; font-size: clamp(1.75rem, 3.4vw, 2.5rem); line-height: 1.15; letter-spacing: -0.02em; }
@@ -133,12 +132,6 @@ body.lp { overflow-x: hidden; }
 @keyframes lpIn { from { opacity: 0; transform: translateY(6px); } }
 .lp-fine { max-width: 760px; margin: 18px auto 0; text-align: center; font-size: .8rem; color: var(--text-dim); }
 
-/* ---- doc types ---- */
-.lp-doctypes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-.lp-doctypes div { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 22px 12px; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: 12px; font-weight: 600; font-size: .9rem; transition: border-color .2s ease; }
-.lp-doctypes div:hover { border-color: var(--border-strong); }
-.lp-doctypes i { font-size: 1.35rem; color: var(--accent); }
-
 /* ---- honesty ---- */
 .lp-honest { display: grid; grid-template-columns: 1fr 1.25fr; gap: 48px; align-items: center; background: var(--bg-secondary); border: 1px solid var(--border-subtle); border-radius: 18px; padding: 44px; }
 .lp-list { list-style: none; display: flex; flex-direction: column; gap: 18px; }
@@ -176,7 +169,6 @@ body.lp { overflow-x: hidden; }
   .lp-grid-3 { grid-template-columns: repeat(2, 1fr); }
   .lp-steps { grid-template-columns: 1fr; }
   .lp-honest { grid-template-columns: 1fr; padding: 28px; gap: 28px; }
-  .lp-doctypes { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 640px) {
   .lp-nav { padding: 10px 16px; }
@@ -184,7 +176,6 @@ body.lp { overflow-x: hidden; }
   .lp-grid-3 { grid-template-columns: 1fr; }
   .lp-demo-panel { grid-template-columns: 1fr; }
   .lp-tab { font-size: .76rem; padding: 9px 6px; gap: 5px; }
-  .lp-doctypes { grid-template-columns: repeat(2, 1fr); }
   .lp-mock-result { flex-direction: column; align-items: flex-start; }
   .lp-btn-lg { width: 100%; }
   .lp-section { padding-top: 72px; }

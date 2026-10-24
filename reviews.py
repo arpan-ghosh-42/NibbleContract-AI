@@ -174,21 +174,22 @@ def build_signals(company, results, labels):
     if scams:
         weight = "high" if len(scams) >= 2 else "medium"
         signals.append(make_signal(
-            "public_scam_reports", "negative", weight, "People report this company as a scam",
-            f"{len(scams)} public post(s) about {company} describe its offers as a scam or fraud. Open the sources and read them yourself.",
+            "public_scam_reports", "negative", weight, "Online reports allege fees taken or interns not paid",
+            f"{len(scams)} public post(s) about {company} allege fraud, such as fees taken or stipends never paid. "
+            "These are claims by others: open the sources and read them yourself.",
             evidence=snippet(scams), source="web search"))
         signals[-1]["sources"] = _sources(scams)
     if complaints:
         weight = "medium" if len(complaints) >= 2 else "low"
         signals.append(make_signal(
             "public_complaints", "negative", weight, "Public complaints about this company",
-            f"{len(complaints)} public post(s) describe bad experiences (for example unpaid stipends or ghosting), without calling it a scam.",
+            f"{len(complaints)} public post(s) describe bad experiences (for example unpaid stipends or ghosting), without alleging fraud.",
             evidence=snippet(complaints), source="web search"))
         signals[-1]["sources"] = _sources(complaints)
     if impersonation:
         # Not held against the company; authenticity.assess decides whether it applies to this offer.
         signals.append(make_signal(
-            "impersonation_warnings", "negative", "low", "Scammers impersonate this company",
+            "impersonation_warnings", "negative", "low", "Warnings about fake offers using this name",
             f"{len(impersonation)} public warning(s) say fake offers are being sent in {company}'s name. "
             "This offer is only trustworthy if it really came from the company's official domain.",
             evidence=snippet(impersonation), source="web search"))
@@ -207,7 +208,7 @@ def build_signals(company, results, labels):
     else:
         status = "warn" if scams or complaints or impersonation else "ok"
         detail = (f"{len(results)} result(s), {len(relevant)} about this company: "
-                  f"{len(scams)} scam report(s), {len(impersonation)} impersonation warning(s), "
+                  f"{len(scams)} fraud report(s), {len(impersonation)} fake-offer warning(s), "
                   f"{len(complaints)} complaint(s), {len(positives)} positive.")
     return signals, status, detail
 

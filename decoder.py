@@ -1,5 +1,5 @@
 """
-Fine-Print Decoder: turns a contract-like document into a plain-language
+Offer-letter review: turns an internship offer letter into a plain-language
 risk report using the Groq chat model.
 
 Privacy: documents are only ever held in memory. Nothing here writes the
@@ -46,18 +46,6 @@ class DecodeError(Exception):
 # -----------------------------
 
 DOC_TYPES = {
-    "rental": {
-        "label": "rental / lease agreement",
-        "focus": [
-            "Automatic renewal, notice periods to leave, and penalties for leaving early",
-            "Security deposit: amount, deductions, conditions where it is forfeited, return deadline",
-            "Rent increases, especially ones the landlord can make on their own during the term",
-            "Fees (late fees, cleaning, admin, key, maintenance) and how they compound",
-            "Who pays for repairs and damage, including normal wear and tear",
-            "Landlord entry without notice, guest/subletting limits, and eviction triggers",
-            "Waivers of the tenant's legal rights or of the landlord's liability",
-        ],
-    },
     "internship_offer": {
         "label": "internship offer letter",
         "focus": [
@@ -68,38 +56,6 @@ DOC_TYPES = {
             "Hours, location, overtime, and whether the role can change without notice",
             "Termination at will, probation, and conditions for a full-time conversion",
             "Background checks, document retention (original certificates), and unpaid trial periods",
-        ],
-    },
-    "scholarship": {
-        "label": "scholarship or financial-aid terms",
-        "focus": [
-            "Conditions that turn the scholarship into a loan or require repayment",
-            "Minimum GPA, credit load, enrollment, or conduct requirements to keep it",
-            "Service, work, or employment obligations after graduation",
-            "Disbursement schedule, what it actually covers, and who receives the money",
-            "Renewal rules and the sponsor's right to reduce or cancel the award",
-            "Deadlines for documents, and consequences of switching majors or taking leave",
-        ],
-    },
-    "loan": {
-        "label": "loan agreement",
-        "focus": [
-            "Interest rate vs. APR, fixed vs. variable rates, and how often interest compounds",
-            "Fees: origination, processing, late payment, prepayment penalties",
-            "Interest capitalization, grace periods, and moratorium terms",
-            "Collateral, co-signer or guarantor liability",
-            "What counts as default and what the lender can do on default (acceleration, seizure)",
-            "Mandatory arbitration, waivers of rights, and the lender's right to change terms",
-        ],
-    },
-    "other": {
-        "label": "contract or agreement",
-        "focus": [
-            "Automatic renewals, lock-in periods, and how to get out",
-            "Money: fees, penalties, deposits, price changes, and payment deadlines",
-            "One-sided rights the other party has to change terms",
-            "Waivers of your rights, liability limits, and mandatory arbitration",
-            "Obligations that continue after the agreement ends",
         ],
     },
 }
@@ -513,7 +469,7 @@ def decode_document(client, model, doc_type, text):
     if len(text) > MAX_DOC_CHARS:
         raise DecodeError(
             f"This document is about {len(text):,} characters; the decoder handles up to {MAX_DOC_CHARS:,}. "
-            "Paste the most important sections (fees, term, termination, deposit) instead.",
+            "Paste the most important sections (stipend, duration, fees, termination) instead.",
             413,
         )
 

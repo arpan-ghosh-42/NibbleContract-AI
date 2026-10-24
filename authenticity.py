@@ -25,11 +25,8 @@ MAX_POSITIVE_BONUS = 25
 HIGH_NEGATIVE_CAP = 35       # any verified high-severity red signal caps the score
 WEIGHTS = {"high": 20, "medium": 10, "low": 5}
 
-VERDICTS = {
-    "likely_genuine": "Looks consistent with a genuine offer",
-    "uncertain": "Uncertain: verify before you trust it",
-    "likely_scam": "High scam risk",
-}
+# The report never calls a company a scam: it shows a risk level and the evidence behind it.
+RISK_LABELS = {"low": "Low risk", "medium": "Medium risk", "high": "High risk"}
 
 # id -> (polarity, weight, needs_quote, label, what the model should look for)
 CATALOG = {
@@ -281,12 +278,21 @@ def score_signals(signals):
     score = max(0, min(MAX_SCORE, score))
 
     if score >= 70:
-        verdict = "likely_genuine"
+        risk_level = "low"
     elif score >= 40:
-        verdict = "uncertain"
+        risk_level = "medium"
     else:
-        verdict = "likely_scam"
-    return score, verdict
+        risk_level = "high"
+    return score, risk_level
+
+
+def risk_label(risk_level, signals):
+    """e.g. "High risk: 3 warning signs found"."""
+    warnings = sum(1 for s in signals if s["counted"] and s["polarity"] == "negative")
+    label = RISK_LABELS[risk_level]
+    if warnings:
+        label += f": {warnings} warning sign{'s' if warnings != 1 else ''} found"
+    return label
 
 
 def build_checklist(company, website_domain, sender_domain, signal_ids):
@@ -365,14 +371,14 @@ def assess(client, model, text, sender_email="", company_name="", website="", li
     rank = {"high": 0, "medium": 1, "low": 2}
     signals.sort(key=lambda s: (order[s["polarity"]], rank[s["weight"]], not s["counted"]))
 
-    score, verdict = score_signals(signals)
+    score, risk_level = score_signals(signals)
     provided = sum(bool(v) for v in (sender_email, company_name, website))
     confidence = "high" if provided >= 2 else "medium" if provided == 1 else "low"
 
     return {
         "score": score,
-        "verdict": verdict,
-        "verdict_label": VERDICTS[verdict],
+        "risk_level": risk_level,
+        "verdict_label": risk_label(risk_level, signals),
         "confidence": confidence,
         "company": company,
         "signals": signals,

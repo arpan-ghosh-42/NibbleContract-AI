@@ -1,25 +1,17 @@
 /**
- * Fine-Print Decoder - standalone frontend
- * Paste or upload a contract, get a plain-language risk report.
+ * NibbleContract AI frontend
+ * Paste or upload an internship offer letter, get a trust score and a plain-language risk report.
  */
 
 const STORAGE_KEYS = {
     REPORTS: 'fpd_reports_v1',
-    THEME: 'fpd_theme_v1',
-    DOC_TYPE: 'fpd_doc_type_v1'
+    THEME: 'fpd_theme_v1'
 };
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const MIN_CHARS = 80;
 const MAX_SAVED_REPORTS = 30;
 const DECODER_DISCLAIMER = 'Not legal advice. Have someone you trust review anything important.';
-const DOC_TYPE_LABELS = {
-    rental: 'rental agreement',
-    internship_offer: 'internship offer',
-    scholarship: 'scholarship terms',
-    loan: 'loan paperwork',
-    other: 'contract'
-};
 const SEVERITY_ORDER = { high: 0, medium: 1, low: 2 };
 
 const State = { file: null, busy: false, reports: [] };
@@ -29,8 +21,6 @@ const $ = id => document.getElementById(id);
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     loadReports();
-    const saved = safeGet(STORAGE_KEYS.DOC_TYPE);
-    if (saved && DOC_TYPE_LABELS[saved]) $('decoderDocType').value = saved;
     setupEvents();
     renderHistory();
 
@@ -44,9 +34,6 @@ function loadExample(key) {
     const sample = window.FPD_SAMPLES && window.FPD_SAMPLES[key];
     if (!sample) return;
     setFile(null);
-    $('decoderDocType').value = sample.doc_type;
-    safeSet(STORAGE_KEYS.DOC_TYPE, sample.doc_type);
-    syncDocTypeFields();
     $('senderEmail').value = sample.sender_email || '';
     $('companyName').value = sample.company_name || '';
     $('companyWebsite').value = sample.website || '';
@@ -57,11 +44,9 @@ function loadExample(key) {
 }
 
 // While waiting for the server, cycle through what it is actually doing.
-function startProgressMessages(docType) {
-    const steps = docType === 'internship_offer'
-        ? ['Reading the document...', 'Hunting for red flags...', 'Checking the domain and website...',
-           'Searching the web for reports...', 'Scoring the offer...']
-        : ['Reading the document...', 'Hunting for red flags...', 'Verifying every quote...', 'Writing your report...'];
+function startProgressMessages() {
+    const steps = ['Reading the offer...', 'Hunting for red flags...', 'Checking the domain and website...',
+        'Searching the web for reports...', 'Scoring the offer...'];
     let i = 0;
     const el = () => document.getElementById('progressText');
     const timer = setInterval(() => {
@@ -117,11 +102,6 @@ function saveReports() {
 // ---------------------------------------------------------------------------
 function setupEvents() {
     $('themeToggleBtn').addEventListener('click', toggleTheme);
-    $('decoderDocType').addEventListener('change', e => {
-        safeSet(STORAGE_KEYS.DOC_TYPE, e.target.value);
-        syncDocTypeFields();
-    });
-    syncDocTypeFields();
     $('btnDecode').addEventListener('click', handleDecode);
     document.querySelectorAll('.example-chip').forEach(chip =>
         chip.addEventListener('click', () => loadExample(chip.dataset.example)));
@@ -144,11 +124,6 @@ function setupEvents() {
         zone.classList.remove('drag-over');
         if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
     });
-}
-
-// The sender/company fields only apply to internship offers.
-function syncDocTypeFields() {
-    $('authFields').style.display = $('decoderDocType').value === 'internship_offer' ? 'flex' : 'none';
 }
 
 function setFile(file) {
@@ -184,32 +159,29 @@ async function handleDecode() {
     const pasted = $('docText').value.trim();
 
     if (!State.file && !pasted) {
-        showToast('Paste the document text or upload a PDF/.txt first.');
+        showToast('Paste the offer letter text or upload a PDF/.txt first.');
         return;
     }
     if (!State.file && pasted.length < MIN_CHARS) {
-        showToast('That is too short to review. Paste the full document.');
+        showToast('That is too short to review. Paste the full offer letter.');
         return;
     }
     if (State.file && pasted) showToast('Using the uploaded file (pasted text is ignored).');
 
-    const docType = $('decoderDocType').value;
+    const docType = 'internship_offer';
     const form = new FormData();
-    form.append('doc_type', docType);
     if (State.file) form.append('file', State.file); else form.append('text', pasted);
-    if (docType === 'internship_offer') {
-        form.append('sender_email', $('senderEmail').value.trim());
-        form.append('company_name', $('companyName').value.trim());
-        form.append('website', $('companyWebsite').value.trim());
-    }
+    form.append('sender_email', $('senderEmail').value.trim());
+    form.append('company_name', $('companyName').value.trim());
+    form.append('website', $('companyWebsite').value.trim());
 
     setBusy(true);
     $('reportArea').innerHTML = '';
-    const progress = startProgressMessages(docType);
+    const progress = startProgressMessages();
     $('statusArea').innerHTML = `
         <div class="panel loading"><div class="spinner"></div>
         <div><strong id="progressText">${escapeHtml(progress.first)}</strong>
-        <div class="hint">Longer documents can take up to a minute.</div></div></div>`;
+        <div class="hint">The online checks can take up to a minute.</div></div></div>`;
 
     try {
         const response = await fetch('/decode', { method: 'POST', body: form });
@@ -230,7 +202,7 @@ async function handleDecode() {
             id: 'rep_' + Date.now(),
             createdAt: new Date().toISOString(),
             docType: docType,
-            title: report.meta.filename || `Pasted ${DOC_TYPE_LABELS[docType]}`,
+            title: report.meta.filename || 'Pasted offer letter',
             report: report
         };
         State.reports.unshift(entry);
@@ -253,8 +225,8 @@ function setBusy(busy) {
     const btn = $('btnDecode');
     btn.disabled = busy;
     btn.innerHTML = busy
-        ? '<i class="fas fa-spinner fa-spin"></i> Decoding...'
-        : '<i class="fas fa-magnifying-glass"></i> Decode';
+        ? '<i class="fas fa-spinner fa-spin"></i> Checking...'
+        : '<i class="fas fa-magnifying-glass"></i> Check offer';
 }
 
 function showReport(entry) {
@@ -291,7 +263,7 @@ function renderHistory() {
         row.innerHTML = `
             <div class="history-main">
                 <strong>${escapeHtml(entry.title)}</strong>
-                <span class="sub">${escapeHtml(DOC_TYPE_LABELS[entry.docType] || 'contract')} · ${escapeHtml(new Date(entry.createdAt).toLocaleString())}</span>
+                <span class="sub">offer letter · ${escapeHtml(new Date(entry.createdAt).toLocaleString())}</span>
             </div>
             <span class="risk-badge risk-${risk}">${risk}</span>
             <button class="history-del" type="button" title="Delete"><i class="fas fa-trash-alt"></i></button>`;
@@ -309,20 +281,23 @@ function renderHistory() {
 // ---------------------------------------------------------------------------
 // Report rendering
 // ---------------------------------------------------------------------------
-const VERDICT_CLASS = { likely_genuine: 'low', uncertain: 'medium', likely_scam: 'high' };
+// Reports saved before the risk-level wording used verdict ids; map those too.
+const LEGACY_VERDICTS = { likely_genuine: 'low', uncertain: 'medium', likely_scam: 'high' };
+const RISK_LABELS = { low: 'Low risk', medium: 'Medium risk', high: 'High risk' };
 
 // Coerce the authenticity block into a safe, known shape (or null).
 function normalizeAuthenticity(raw) {
     if (!raw || typeof raw !== 'object') return null;
     const str = v => (typeof v === 'string' ? v : '');
     const list = v => (Array.isArray(v) ? v : []);
-    const verdict = VERDICT_CLASS.hasOwnProperty(raw.verdict) ? raw.verdict : 'uncertain';
+    const riskLevel = SEVERITY_ORDER.hasOwnProperty(raw.risk_level) ? raw.risk_level
+        : (LEGACY_VERDICTS[raw.verdict] || 'medium');
     const score = Math.max(0, Math.min(100, Math.round(Number(raw.score)) || 0));
     const weights = ['high', 'medium', 'low'];
     return {
         score: score,
-        verdict: verdict,
-        verdict_label: str(raw.verdict_label),
+        risk_level: riskLevel,
+        verdict_label: raw.risk_level ? str(raw.verdict_label) : RISK_LABELS[riskLevel],
         confidence: ['low', 'medium', 'high'].includes(raw.confidence) ? raw.confidence : 'low',
         company: str(raw.company),
         limits: str(raw.limits),
@@ -364,7 +339,7 @@ function renderAuthenticity(report) {
             ? `<div class="decoder-card"><p class="decoder-empty"><i class="fas fa-circle-info"></i> ${escapeHtml(report.authenticity_error)}</p></div>`
             : '';
     }
-    const cls = VERDICT_CLASS[au.verdict];
+    const cls = au.risk_level;
     const verdictIcons = { low: 'fa-circle-check', medium: 'fa-circle-question', high: 'fa-triangle-exclamation' };
 
     const signalHtml = list => list.map(s => `

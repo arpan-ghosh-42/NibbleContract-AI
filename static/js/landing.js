@@ -127,7 +127,7 @@
     // ---- interactive trust-score examples ----
     const DEMOS = {
         scam: {
-            score: 0, cls: 'high', icon: 'fa-triangle-exclamation', verdict: 'High scam risk',
+            score: 0, cls: 'high', icon: 'fa-triangle-exclamation', verdict: 'High risk: 5 warning signs found',
             note: 'Fictional offer from "Global Tech Hiring Solution"',
             signals: [
                 ['bad', 'Asks you to pay money', 'A "refundable" registration fee of Rs 4,999'],
@@ -138,7 +138,7 @@
             ]
         },
         fake: {
-            score: 35, cls: 'high', icon: 'fa-triangle-exclamation', verdict: 'High scam risk',
+            score: 35, cls: 'high', icon: 'fa-triangle-exclamation', verdict: 'High risk: 2 warning signs found',
             note: 'A well-written letter, but the company does not exist online',
             signals: [
                 ['bad', 'Company domain isn\'t registered', 'The email domain has no registration record'],
@@ -149,7 +149,7 @@
             ]
         },
         real: {
-            score: 75, cls: 'low', icon: 'fa-circle-check', verdict: 'Looks consistent with a genuine offer',
+            score: 75, cls: 'low', icon: 'fa-circle-check', verdict: 'Low risk',
             note: 'Established domain, working website, real selection process',
             signals: [
                 ['good', 'Long-established domain', 'Registered for over 5 years'],

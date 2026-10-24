@@ -42,7 +42,7 @@ groq_client = OpenAI(
 
 # One place to rename the product. Templates read these through the context processor.
 BRAND = ("NibbleContract", "AI")
-TAGLINE = "Read it before you sign it."
+TAGLINE = "Check the internship before you apply, and the offer before you sign."
 
 
 @app.context_processor
@@ -75,7 +75,8 @@ def request_too_large(error):
 @app.route("/decode", methods=["POST"])
 def decode():
     # Never log or persist document contents; only sizes and outcomes.
-    doc_type = request.form.get("doc_type", "other")
+    # The product only reviews internship offers now; any other doc_type from old clients is ignored.
+    doc_type = "internship_offer"
     upload = request.files.get("file")
 
     try:
@@ -87,23 +88,22 @@ def decode():
 
         report = decoder.decode_document(groq_client, MODEL, doc_type, text)
 
-        if doc_type == "internship_offer":
-            try:
-                report["authenticity"] = authenticity.assess(
-                    groq_client, MODEL, text,
-                    sender_email=request.form.get("sender_email", ""),
-                    company_name=request.form.get("company_name", ""),
-                    website=request.form.get("website", ""),
-                    live_lookups=LIVE_LOOKUPS,
-                    tavily_key=TAVILY_API_KEY,
-                )
-            except RateLimitError:
-                raise
-            except Exception as e:
-                # The contract review is still useful without the trust score.
-                app.logger.warning("authenticity failed: %s", type(e).__name__)
-                report["authenticity"] = None
-                report["authenticity_error"] = "The authenticity check couldn't run this time. The contract review below is still valid."
+        try:
+            report["authenticity"] = authenticity.assess(
+                groq_client, MODEL, text,
+                sender_email=request.form.get("sender_email", ""),
+                company_name=request.form.get("company_name", ""),
+                website=request.form.get("website", ""),
+                live_lookups=LIVE_LOOKUPS,
+                tavily_key=TAVILY_API_KEY,
+            )
+        except RateLimitError:
+            raise
+        except Exception as e:
+            # The offer review is still useful without the trust score.
+            app.logger.warning("authenticity failed: %s", type(e).__name__)
+            report["authenticity"] = None
+            report["authenticity_error"] = "The trust score couldn't be calculated this time. The offer review below is still valid."
 
     except decoder.DecodeError as e:
         return jsonify({"error": e.message}), e.status
