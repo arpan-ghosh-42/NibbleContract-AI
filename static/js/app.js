@@ -82,7 +82,7 @@ function safeSet(key, value) {
 }
 
 function initTheme() {
-    const theme = safeGet(STORAGE_KEYS.THEME) || 'dark';
+    const theme = safeGet(STORAGE_KEYS.THEME) || 'light';
     document.documentElement.setAttribute('data-theme', theme);
     updateThemeIcon(theme);
 }

@@ -1,23 +1,20 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ brand_a }} {{ brand_b }} · {{ tagline }}</title>
     <meta name="description" content="{{ brand_a }} {{ brand_b }}: {{ tagline }} Get a plain-language risk report, a scam trust score, and live checks on the company's domain and reputation.">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
-    <script>(function(){var d=document.documentElement,q=new URLSearchParams(location.search),t,m;try{t=q.get('theme')||localStorage.getItem('fpd_theme_v1')}catch(e){t=q.get('theme')}if(t==='light'||t==='dark')d.setAttribute('data-theme',t);try{m=q.get('motion')||localStorage.getItem('fpd_motion_v1')}catch(e){m=q.get('motion')}if(m!=='on'&&m!=='off')m=(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?'off':'on';d.setAttribute('data-motion',m)})()</script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23ea580c'/><text x='50' y='71' font-size='62' font-family='Georgia,serif' font-weight='700' text-anchor='middle' fill='white'>N</text></svg>">
+    <script>(function(){var d=document.documentElement,q=new URLSearchParams(location.search),t,m;try{t=q.get('theme')||localStorage.getItem('fpd_theme_v1')}catch(e){t=q.get('theme')}if(t==='light'||t==='dark')d.setAttribute('data-theme',t);m=q.get('motion');if(m!=='on'&&m!=='off')m=(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)?'off':'on';d.setAttribute('data-motion',m)})()</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=6">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}?v=6">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/fx.css') }}?v=4">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}?v=7">
 </head>
 <body class="lp">
-    <div class="lp-bg" aria-hidden="true"><span class="lp-orb lp-orb-1"></span><span class="lp-orb lp-orb-2"></span><span class="lp-orb lp-orb-3"></span></div>
-
     <header class="lp-nav" id="lpNav">
         <a class="lp-brand" href="/" aria-label="{{ brand_a }} {{ brand_b }} home">
             <span class="lp-logo"><i class="fas fa-shield-halved"></i></span>
@@ -30,7 +27,6 @@
             <a href="#faq">FAQ</a>
         </nav>
         <div class="lp-nav-actions">
-            <button class="lp-icon-btn motion-btn" id="motionToggleBtn" type="button" aria-pressed="true" title="Animations: on" aria-label="Toggle animations"><i class="fas fa-wand-magic-sparkles"></i></button>
             <button class="lp-icon-btn" id="themeToggleBtn" type="button" title="Toggle theme" aria-label="Toggle theme"><i class="fas fa-sun" id="themeToggleIcon"></i></button>
             <a class="lp-btn lp-btn-primary lp-btn-sm" href="/app">Try it free <i class="fas fa-arrow-right"></i></a>
         </div>
@@ -40,12 +36,12 @@
         <!-- HERO -->
         <section class="lp-hero">
             <div class="lp-hero-copy">
-                <span class="lp-pill"><span class="lp-pulse"></span> Built for students signing their first contract</span>
-                <h1>Read the fine print <span class="lp-grad">before it reads you.</span></h1>
+                <span class="lp-pill">Built for students signing their first contract</span>
+                <h1>Read the fine print <span class="lp-accent">before it reads you.</span></h1>
                 <p class="lp-lead">Paste a rental agreement, internship offer, scholarship or loan. Get a plain-language risk report, a <strong>scam trust score</strong>, and live checks on the company's domain and public reputation.</p>
                 <div class="lp-cta-row">
                     <a class="lp-btn lp-btn-primary lp-btn-lg" href="/app"><i class="fas fa-magnifying-glass"></i> Decode a document</a>
-                    <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/app?example=scam"><i class="fas fa-wand-magic-sparkles"></i> See a scam get caught</a>
+                    <a class="lp-btn lp-btn-ghost lp-btn-lg" href="/app?example=scam"><i class="fas fa-eye"></i> See a scam get caught</a>
                 </div>
                 <ul class="lp-trust-row">
                     <li><i class="fas fa-circle-check"></i> Every quote verified</li>
@@ -99,19 +95,19 @@
             <ol class="lp-steps">
                 <li class="lp-card lp-reveal">
                     <span class="lp-step-num">1</span>
-                    <div class="lp-ico lp-ico-violet"><i class="fas fa-file-arrow-up"></i></div>
+                    <div class="lp-ico"><i class="fas fa-file-arrow-up"></i></div>
                     <h3>Paste or upload</h3>
                     <p>Drop in a PDF or .txt (up to 5 MB) or paste the text. For internship offers, add the sender's email, company name and website for a sharper check.</p>
                 </li>
                 <li class="lp-card lp-reveal">
                     <span class="lp-step-num">2</span>
-                    <div class="lp-ico lp-ico-cyan"><i class="fas fa-magnifying-glass-chart"></i></div>
+                    <div class="lp-ico"><i class="fas fa-magnifying-glass-chart"></i></div>
                     <h3>We read it skeptically</h3>
                     <p>An AI reviewer hunts for traps in your document while live checks look up the company's domain, website and public reviews.</p>
                 </li>
                 <li class="lp-card lp-reveal">
                     <span class="lp-step-num">3</span>
-                    <div class="lp-ico lp-ico-pink"><i class="fas fa-clipboard-check"></i></div>
+                    <div class="lp-ico"><i class="fas fa-clipboard-check"></i></div>
                     <h3>Get a report you can act on</h3>
                     <p>Red flags with the exact clause quoted, money and deadlines in one list, and questions to ask before you sign.</p>
                 </li>
@@ -127,37 +123,37 @@
             </div>
             <div class="lp-grid-3">
                 <article class="lp-card lp-feature lp-reveal">
-                    <div class="lp-ico lp-ico-red"><i class="fas fa-flag"></i></div>
+                    <div class="lp-ico"><i class="fas fa-flag"></i></div>
                     <h3>Red flags, with receipts</h3>
                     <p>Auto-renewals, forfeited deposits, one-sided rent hikes, training bonds. Each flag quotes the clause and explains why it matters.</p>
                     <span class="lp-feature-tag">Quotes verified word for word</span>
                 </article>
                 <article class="lp-card lp-feature lp-reveal">
-                    <div class="lp-ico lp-ico-violet"><i class="fas fa-user-shield"></i></div>
+                    <div class="lp-ico"><i class="fas fa-user-shield"></i></div>
                     <h3>Internship trust score</h3>
                     <p>A 0 to 100 score with a clear verdict, built from fixed rules you can read. Warning signs and good signs are listed separately.</p>
                     <span class="lp-feature-tag">Rules, not vibes</span>
                 </article>
                 <article class="lp-card lp-feature lp-reveal">
-                    <div class="lp-ico lp-ico-cyan"><i class="fas fa-globe"></i></div>
+                    <div class="lp-ico"><i class="fas fa-globe"></i></div>
                     <h3>Domain age &amp; website check</h3>
                     <p>Is the company's domain brand new or unregistered? Does the website load, mention the company, or look parked?</p>
                     <span class="lp-feature-tag">Live RDAP lookup</span>
                 </article>
                 <article class="lp-card lp-feature lp-reveal">
-                    <div class="lp-ico lp-ico-orange"><i class="fas fa-comments"></i></div>
+                    <div class="lp-ico"><i class="fas fa-comments"></i></div>
                     <h3>Web &amp; Reddit reputation</h3>
                     <p>Searches for scam reports, complaints and real experiences, and links the sources so you can read them yourself.</p>
                     <span class="lp-feature-tag">Sources linked</span>
                 </article>
                 <article class="lp-card lp-feature lp-reveal">
-                    <div class="lp-ico lp-ico-green"><i class="fas fa-calendar-check"></i></div>
+                    <div class="lp-ico"><i class="fas fa-calendar-check"></i></div>
                     <h3>Deadlines &amp; money</h3>
                     <p>Every fee, deposit, notice period and date pulled into one list, so nothing hides in paragraph nine.</p>
                     <span class="lp-feature-tag">One glance</span>
                 </article>
                 <article class="lp-card lp-feature lp-reveal">
-                    <div class="lp-ico lp-ico-pink"><i class="fas fa-circle-question"></i></div>
+                    <div class="lp-ico"><i class="fas fa-circle-question"></i></div>
                     <h3>Questions to ask</h3>
                     <p>Specific questions to send before you sign, each with a copy button. Plus a checklist to verify the company yourself.</p>
                     <span class="lp-feature-tag">Copy &amp; send</span>
@@ -244,7 +240,6 @@
         <p class="lp-foot-contact"><i class="fas fa-envelope"></i> Contact the developer: <a href="mailto:arpanghosh6734@gmail.com">arpanghosh6734@gmail.com</a></p>
     </footer>
 
-    <script src="{{ url_for('static', filename='js/landing.js') }}?v=5"></script>
-    <script src="{{ url_for('static', filename='js/fx.js') }}?v=2"></script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}?v=6"></script>
 </body>
 </html>

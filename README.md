@@ -37,8 +37,9 @@ How the score works (see `authenticity.py`):
 ## Look and feel
 
 - The product name and tagline live in one place, `BRAND` and `TAGLINE` in `app.py`. Change them there and every page, title and report updates.
-- Buttons use a "stamp" style (hard shadow that presses down, a shine sweep, click ripple, and a magnetic pull on the main ones). The background is a faint document whose flagged clauses light up around your cursor, and the hero card tilts with the mouse.
-- **Animations follow your OS "reduce motion" setting by default.** The wand icon in the header turns them on or off and remembers the choice. (On Windows, if "Show animations" is off, the site starts with animations off until you click it.)
+- Warm off-white by default with a single orange accent, plus a warm dark mode (sun/moon button in the header). All colors are CSS variables at the top of `static/css/style.css`.
+- Fonts: Fraunces for headings, Instrument Sans for body text (Google Fonts).
+- Animations are kept small (the landing page demo, the trust-score ring, fade-ins) and switch off when your OS asks for reduced motion.
 
 ## Run it
 

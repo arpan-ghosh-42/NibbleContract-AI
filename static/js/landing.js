@@ -5,7 +5,7 @@
 (function () {
     const THEME_KEY = 'fpd_theme_v1';
     const $ = id => document.getElementById(id);
-    // Motion preference lives on <html data-motion="on|off"> (set early; defaults to the OS setting, toggleable in the nav).
+    // Motion preference lives on <html data-motion="on|off">, set before first paint from the OS "reduce motion" setting.
     const motionOff = () => document.documentElement.getAttribute('data-motion') === 'off';
 
     // ---- theme ----
@@ -122,8 +122,6 @@
         }
 
         playHero();
-        // The nav's motion toggle replays the hero (or jumps to its final state when switched off).
-        document.addEventListener('fpd-motion', playHero);
     }
 
     // ---- interactive trust-score examples ----
