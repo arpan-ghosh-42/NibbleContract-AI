@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms and Conditions · {{ brand_a }} {{ brand_b }}</title>
+    <meta name="description" content="The terms for using {{ brand_a }} {{ brand_b }}: what the service does, how results are produced, and what it is not responsible for.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%23ea580c'/><text x='50' y='71' font-size='62' font-family='Georgia,serif' font-weight='700' text-anchor='middle' fill='white'>N</text></svg>">
+    <script>(function(){var d=document.documentElement,q=new URLSearchParams(location.search),t;try{t=q.get('theme')||localStorage.getItem('fpd_theme_v1')}catch(e){t=q.get('theme')}if(t==='light'||t==='dark')d.setAttribute('data-theme',t);d.setAttribute('data-motion','off')})()</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=13">
+</head>
+<body class="app-page">
+    <header class="topbar">
+        <a class="brand" href="/" title="Back to home">
+            <div class="brand-logo-icon"><i class="fas fa-shield-halved"></i></div>
+            <div>
+                <h1>{{ brand_a }} <b>{{ brand_b }}</b></h1>
+                <span>{{ tagline }}</span>
+            </div>
+        </a>
+        <div class="topbar-actions">
+            <a class="top-link" href="/"><i class="fas fa-house"></i> <span>Home</span></a>
+            <a class="top-link" href="/login"><i class="fas fa-right-to-bracket"></i> <span>Log in</span></a>
+        </div>
+    </header>
+
+    <main class="terms">
+        <article>
+            <h1>Terms and Conditions</h1>
+            <p class="terms-date">Last updated: {{ terms_updated }}</p>
+
+            <p class="terms-lead">NibbleContract AI gives you an estimate, built from your text and whatever public information exists online, to help you judge an internship. It is not a verdict on any company and not legal advice, and the final decision is always yours. By creating an account or using the service, you agree to these terms.</p>
+
+            <h2 id="about">1. About these terms</h2>
+            <p>NibbleContract AI ("the service", "we", "us") is a free tool run by Arpan Ghosh at nibblecontractai.in. These terms apply to everyone who visits the site, creates an account or runs a check.</p>
+            <p>You accept these terms by ticking "I agree to the Terms and Conditions" when you create an account, or by using the service. If you don't agree, please don't use it. You must be at least 18 years old, or use the service with the permission of a parent or guardian.</p>
+
+            <h2 id="what">2. What NibbleContract AI does</h2>
+            <p>The service helps students judge internship opportunities. It has two checks:</p>
+            <ul>
+                <li><strong>Check a job post:</strong> before you apply, it looks for warning signs and good signs in an internship post.</li>
+                <li><strong>Check an offer letter:</strong> after you're selected, it reviews the letter's terms and estimates how trustworthy the offer looks.</li>
+            </ul>
+            <p>Each check produces a trust score from 0 to 100, a risk level (Low, Medium or High risk) and the evidence behind it. The service never declares that a company is a scam or that an offer is genuine. It shows signals and sources so you can make your own decision.</p>
+
+            <h2 id="how">3. How results are produced</h2>
+            <p>Results depend on two things: the text you provide, and the public information available on the web at the moment you run a check.</p>
+            <ul>
+                <li><strong>AI analysis.</strong> Artificial-intelligence models read your text and look for known warning signs and good signs. AI can misread text, miss things or make mistakes.</li>
+                <li><strong>Online research.</strong> Automated agents search public sources: web search results, Reddit discussions, news coverage, domain registration records and the company's own website. We don't control these sources, and they can be incomplete, outdated, biased or wrong.</li>
+                <li><strong>Less information means less certainty.</strong> New or small companies often have little or no online presence. That is not evidence against them, and the score for such companies rests on less information.</li>
+                <li><strong>Results can change.</strong> Running the same check again, or on another day, can give a different result as models vary and online information changes.</li>
+                <li><strong>Fixed scoring rules.</strong> The score comes from fixed rules applied to the evidence found. The rules can't capture every situation, and a high score does not mean an opportunity is safe.</li>
+            </ul>
+
+            <h2 id="advice">4. Not advice, no guarantees</h2>
+            <p>NibbleContract AI is an information tool. It is <strong>not legal, financial or career advice</strong>, and it doesn't replace a lawyer, your college placement cell or your own judgement.</p>
+            <p>We make <strong>no guarantee</strong> that any result is accurate, complete or up to date. In particular:</p>
+            <ul>
+                <li>A <strong>low-risk</strong> result does not prove that a company, recruiter or offer is genuine.</li>
+                <li>A <strong>high-risk</strong> result does not prove that a company has done anything wrong. It means warning signs were found and you should look more closely.</li>
+                <li>Statements, reviews and snippets from third-party websites are the opinions of their authors, not ours. We don't verify them.</li>
+            </ul>
+            <p>The service is provided free, <strong>"as is" and "as available"</strong>, without warranties of any kind, to the extent the law allows.</p>
+
+            <h2 id="use">5. Your responsibilities and acceptable use</h2>
+            <ul>
+                <li><strong>Verify before you act.</strong> Before you pay any money, share personal documents or accept an offer, confirm the company yourself through its official website and other trusted sources.</li>
+                <li><strong>Never pay fees because of a score.</strong> Genuine internships don't ask candidates to pay. No result from this service is a reason to make a payment.</li>
+                <li><strong>Only share what you're allowed to share.</strong> Upload or paste only documents you have the right to use. Remove sensitive personal details you don't need checked, such as Aadhaar, PAN or bank numbers, before you paste.</li>
+                <li><strong>Don't use results to accuse anyone.</strong> Results are estimates, not findings of fact. Don't publish them as proof that a person or company is fraudulent.</li>
+            </ul>
+            <p>You agree not to misuse the service, including by:</p>
+            <ul>
+                <li>sending automated or bulk requests, or scraping the service;</li>
+                <li>trying to get around login, rate limits or security measures;</li>
+                <li>uploading malware, illegal content, or content meant to manipulate the AI;</li>
+                <li>using the service to harass, defame or harm any person or business.</li>
+            </ul>
+
+            <h2 id="account">6. Your account</h2>
+            <p>You need an account, created with an email address and a password, to run checks. Use an email address you own, keep your password private, and tell us if you think someone else has accessed your account. You're responsible for activity under your account.</p>
+            <p>We may suspend or close an account that breaks these terms or puts the service or other users at risk.</p>
+
+            <h2 id="data">7. Your documents and your data</h2>
+            <ul>
+                <li><strong>Documents and posts</strong> you check are processed in memory to produce your report. They are not saved on our servers, and our logs record only sizes and outcomes, never their contents.</li>
+                <li><strong>AI processing.</strong> To analyse your text, it is sent to our AI provider (Groq), which processes it under its own terms.</li>
+                <li><strong>Online research</strong> sends only the company's name and website domain to search and lookup services (such as Tavily, DuckDuckGo and domain registration records). The company's public website may be visited. If you paste a link, our server opens that page to read the post.</li>
+                <li><strong>Your account</strong> (email address and an encrypted password) is stored by our login provider, Supabase. Sign-up and password emails are sent through Resend.</li>
+                <li><strong>Saved reports</strong> stay in your own browser's storage, not on our servers. Clearing your browser data deletes them.</li>
+                <li><strong>Technical logs.</strong> Our hosting and login providers (Render and Supabase) may log technical data such as IP addresses and request times, for security and reliability.</li>
+            </ul>
+            <p>We don't sell your data or use it for advertising. To delete your account, email us from the address you signed up with.</p>
+
+            <h2 id="third-party">8. Third-party services and links</h2>
+            <p>Reports link to websites, posts and articles we don't own or control. We aren't responsible for their content, accuracy or availability, or for what happens when you use them. The service also relies on third-party providers (for AI, search, hosting, login and email); if one of them is unavailable, parts of a check may not run.</p>
+
+            <h2 id="liability">9. Limitation of liability</h2>
+            <p>You use NibbleContract AI at your own risk. To the maximum extent permitted by law, NibbleContract AI and its operator are <strong>not responsible</strong> for any loss or damage arising from your use of, or reliance on, the service, including:</p>
+            <ul>
+                <li>money paid to, or fraud committed by, any company, recruiter or other third party;</li>
+                <li>an opportunity you accepted, declined or missed because of a result;</li>
+                <li>errors, omissions or delays in any result, including information from third-party sources;</li>
+                <li>decisions you or others make based on a report;</li>
+                <li>the service being unavailable, slow, or losing saved reports stored in your browser.</li>
+            </ul>
+            <p>Because the service is free, our total liability to you for any claim is limited to zero rupees (₹0), unless the law requires otherwise. Nothing in these terms limits any liability that cannot be limited by law.</p>
+
+            <h2 id="changes">10. Changes, availability and ending your use</h2>
+            <p>We may update these terms. The date at the top shows the latest version, and continuing to use the service after a change means you accept the new terms. We may also change, pause or stop the service, or any feature, at any time and without notice.</p>
+            <p>You can stop using the service whenever you like. The NibbleContract AI name, design and code belong to its operator; the documents you check remain yours.</p>
+
+            <h2 id="law">11. Governing law and contact</h2>
+            <p>These terms are governed by the laws of India. Any dispute will be handled by the courts of India.</p>
+            <p>Questions, account deletion or concerns about a result: email <a href="mailto:arpanghosh6734@gmail.com">arpanghosh6734@gmail.com</a>.</p>
+        </article>
+    </main>
+</body>
+</html>

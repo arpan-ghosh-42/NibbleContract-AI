@@ -44,6 +44,9 @@ groq_client = OpenAI(
 
 # One place to rename the product. Templates read these through the context processor.
 BRAND = ("NibbleContract", "AI")
+# Bump when templates/terms.html changes: sign-ups record which version they agreed to.
+TERMS_VERSION = "2026-10-25"
+TERMS_UPDATED = "25 October 2026"
 TAGLINE = "Check the internship before you apply, and the offer before you sign."
 
 
@@ -52,7 +55,8 @@ def inject_brand():
     # The Supabase URL and publishable key are public by design; the secret key never reaches the browser.
     supabase_url, supabase_key = auth.settings()
     return {"brand_a": BRAND[0], "brand_b": BRAND[1], "tagline": TAGLINE,
-            "supabase_url": supabase_url, "supabase_key": supabase_key, "auth_enabled": auth.enabled()}
+            "supabase_url": supabase_url, "supabase_key": supabase_key, "auth_enabled": auth.enabled(),
+            "terms_version": TERMS_VERSION, "terms_updated": TERMS_UPDATED}
 
 
 @app.route("/")
@@ -68,6 +72,11 @@ def tool():
 @app.route("/login")
 def login():
     return render_template("login.html")
+
+
+@app.route("/terms")
+def terms():
+    return render_template("terms.html")
 
 
 @app.route("/status")

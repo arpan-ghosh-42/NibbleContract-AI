@@ -91,6 +91,7 @@ The tool at `/app` is for logged-in users; the landing page stays public. Accoun
 - The browser logs in with `supabase-js`. Every check sends the user's access token, and the server ([`auth.py`](auth.py)) confirms it with Supabase before spending any Groq or Tavily credits. Requests without a valid login get `401`.
 - Only the Supabase URL and the publishable key reach the browser; both are public by design. Confirmed logins are cached for 5 minutes, keyed by a hash of the token.
 - Without `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` the app runs open, which is handy for local development.
+- Creating an account requires agreeing to the [Terms and Conditions](templates/terms.html) (`/terms`). Supabase stores which version each user accepted and when (`terms_version`, `terms_accepted_at` in the user's metadata); bump `TERMS_VERSION` in `app.py` when the terms change.
 
 Supabase's built-in email service only delivers to your own Supabase team (2 emails an hour). For public sign-ups, either turn off **Confirm email** (Authentication → Sign In / Providers → Email) or add your own SMTP provider.
 

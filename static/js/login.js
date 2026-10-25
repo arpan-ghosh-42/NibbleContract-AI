@@ -34,6 +34,7 @@
         $('authEmail').hidden = mode === 'recover';
         $('passwordBlock').hidden = mode === 'forgot';
         $('confirmBlock').hidden = !(mode === 'register' || mode === 'recover');
+        $('termsBlock').hidden = mode !== 'register';
         $('authPassword').autocomplete = mode === 'login' ? 'current-password' : 'new-password';
         $('forgotLink').hidden = mode !== 'login';
         $('backToLogin').hidden = mode === 'login' || mode === 'register';
@@ -54,6 +55,7 @@
         if (/rate limit|too many/i.test(msg)) return 'Too many attempts. Wait a few minutes and try again.';
         if (/password/i.test(msg) && /(weak|short|least|characters)/i.test(msg)) return 'That password is too weak. Use at least 8 characters.';
         if (/already registered|already exists/i.test(msg)) return 'An account with this email already exists. Log in instead.';
+        if (/failed to fetch|network|load failed/i.test(msg)) return "We couldn't reach the login service. Check your connection and try again.";
         if (/not authorized/i.test(msg)) return "We can't send a confirmation email to this address yet. Please try again later or contact the site owner.";
         return msg || 'Something went wrong. Please try again.';
     }
@@ -73,6 +75,7 @@
         if (mode !== 'recover' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showMessage('Enter a valid email address.', 'error');
         if (mode !== 'forgot' && password.length < 8) return showMessage('Use a password of at least 8 characters.', 'error');
         if ((mode === 'register' || mode === 'recover') && password !== confirm) return showMessage("The passwords don't match.", 'error');
+        if (mode === 'register' && !$('authTerms').checked) return showMessage('Please read and agree to the Terms and Conditions to create an account.', 'error');
 
         busy(true);
         try {
@@ -82,7 +85,11 @@
                 location.replace(next);
             } else if (mode === 'register') {
                 const { data, error } = await auth.client.auth.signUp({
-                    email, password, options: { emailRedirectTo: location.origin + '/login?next=' + encodeURIComponent(next) }
+                    email, password, options: {
+                        emailRedirectTo: location.origin + '/login?next=' + encodeURIComponent(next),
+                        // Kept on the account in Supabase as a record of which terms were accepted, and when.
+                        data: { terms_version: window.NC_TERMS_VERSION || '', terms_accepted_at: new Date().toISOString() }
+                    }
                 });
                 if (error) return showMessage(friendly(error), 'error');
                 if (data.session) return location.replace(next);           // email confirmation is off
