@@ -20,6 +20,7 @@ import authenticity
 import decoder
 import job_signals
 import lookups
+import relevance
 from agents import orchestrator
 
 MAX_POST_CHARS = 15_000          # posts are short; only the start is analysed
@@ -37,8 +38,6 @@ NO_FETCH_DOMAINS = {
     "foundit.in", "monster.com", "internshala.com", "wellfound.com", "instahyre.com",
     "shine.com", "timesjobs.com", "apna.co", "workindia.in",
 }
-NOT_A_POST_MESSAGE = ("That doesn't look like an internship or job post. Paste the post itself "
-                      "(the text with the role, stipend and how to apply).")
 NO_FETCH_MESSAGE = "This site blocks automated reading. Copy the job post text and paste it here."
 UNREADABLE_MESSAGE = ("We couldn't read a job post on that page (it may need a login or JavaScript). "
                       "Copy the job post text and paste it here.")
@@ -152,7 +151,7 @@ def analyze_post(client, model, text, company_name="", website=""):
     ])
 
     if raw.get("is_job_post") is False:
-        raise decoder.DecodeError(NOT_A_POST_MESSAGE, 422)
+        raise decoder.DecodeError(relevance.NOT_A_POST_MESSAGE, 422)
 
     normalized_source = decoder.normalize_for_match(text)
     signals, seen = [], set()
@@ -247,6 +246,7 @@ def check_post(client, model, text="", url="", company_name="", website="", live
     if len(text) > decoder.MAX_DOC_CHARS:
         raise decoder.DecodeError("That's much longer than a job post. Paste just the post itself.", 413)
     text = text[:MAX_POST_CHARS]
+    relevance.require_job_post_words(text)     # free check before any model call
 
     # The analyst runs first: the research agents need the company name and role it finds.
     started = time.time()

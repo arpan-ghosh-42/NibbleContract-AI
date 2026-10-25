@@ -15,6 +15,8 @@ Fake internships are everywhere: "training programs" that charge a fee, WhatsApp
 | Optional | Company name, website | Sender email, company name, website |
 | You get | Trust score, risk level, **internship type**, warning and good signs with evidence, research agent timeline, questions to ask before applying, a "verify it yourself" checklist | The same trust score and research, plus red flags in the terms (bonds, deposits, held certificates) with the exact clause quoted, money and deadlines, and questions to ask before signing |
 
+Only internship material is checked. Anything else, such as a medical report, an invoice or a resume, is refused with a clear message and never gets a score ([`relevance.py`](relevance.py)): a free keyword check first, then a quick AI confirmation for offer letters (job posts are confirmed by the post analyst).
+
 The report shows a risk level (**Low**, **Medium** or **High risk**, e.g. "High risk: 3 warning signs found") and the evidence. It never calls a company a scam: it's an estimate from public information, not a judgement.
 
 **Internship type** (job posts): `paid_internship`, `unpaid_internship`, `training_or_paid_course` (a course or certificate sold as an internship), `agency_or_recruiter_post` or `unclear`. The label is only used when the lines that justify it are really in the post.
@@ -166,6 +168,7 @@ decoder/
 ├── auth.py             # login check for the API (Supabase Auth)
 ├── job_post.py         # job-post check: link reading, post analyst, internship type
 ├── job_signals.py      # job-post signal catalogue and scoring rules
+├── relevance.py        # refuses anything that isn't an internship post or offer letter
 ├── decoder.py          # offer-letter review: extraction, prompts, JSON repair, quote verification
 ├── authenticity.py     # offer-letter trust score, sender and domain checks
 ├── lookups.py          # RDAP domain age and SSRF-safe website checks

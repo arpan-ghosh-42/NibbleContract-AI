@@ -8,6 +8,7 @@ import auth
 import authenticity
 import decoder
 import job_post
+import relevance
 
 load_dotenv()
 
@@ -139,6 +140,9 @@ def decode():
         else:
             text, source = request.form.get("text", ""), "paste"
 
+        if len(decoder.clean_text(text)) >= decoder.MIN_DOC_CHARS:
+            # Only internship offer letters get a review and a trust score; anything else is refused here.
+            relevance.require_offer_letter(groq_client, MODEL, text)
         report = decoder.decode_document(groq_client, MODEL, doc_type, text)
 
         try:
