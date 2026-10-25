@@ -4,7 +4,7 @@
 
 Fake internships are everywhere: "training programs" that charge a fee, WhatsApp-only onboarding, stipends that are too good to be true, offer letters from companies that don't exist. NibbleContract AI gives students a **0 to 100 trust score** for an internship, with the evidence behind every point, so they can decide before they pay, apply or sign.
 
-**Live demo:** https://nibblecontract-ai.onrender.com (free hosting, so the first load can take a few seconds)
+**Live demo:** https://nibblecontractai.in (free hosting, so the first load can take a few seconds)
 
 ## Two checks
 
