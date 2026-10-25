@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import io
 import os
 
+import auth
 import authenticity
 import decoder
 import job_post
@@ -48,7 +49,10 @@ TAGLINE = "Check the internship before you apply, and the offer before you sign.
 
 @app.context_processor
 def inject_brand():
-    return {"brand_a": BRAND[0], "brand_b": BRAND[1], "tagline": TAGLINE}
+    # The Supabase URL and publishable key are public by design; the secret key never reaches the browser.
+    supabase_url, supabase_key = auth.settings()
+    return {"brand_a": BRAND[0], "brand_b": BRAND[1], "tagline": TAGLINE,
+            "supabase_url": supabase_url, "supabase_key": supabase_key, "auth_enabled": auth.enabled()}
 
 
 @app.route("/")
@@ -59,6 +63,11 @@ def home():
 @app.route("/app")
 def tool():
     return render_template("app.html")
+
+
+@app.route("/login")
+def login():
+    return render_template("login.html")
 
 
 @app.route("/status")
@@ -74,6 +83,7 @@ def request_too_large(error):
 
 
 @app.route("/check-post", methods=["POST"])
+@auth.login_required
 def check_post():
     # Never log or persist the post itself; only sizes and outcomes.
     try:
@@ -106,6 +116,7 @@ def check_post():
 
 
 @app.route("/decode", methods=["POST"])
+@auth.login_required
 def decode():
     # Never log or persist document contents; only sizes and outcomes.
     # The product only reviews internship offers now; any other doc_type from old clients is ignored.

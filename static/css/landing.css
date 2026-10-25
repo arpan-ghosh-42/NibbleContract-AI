@@ -35,6 +35,8 @@ body.lp { overflow-x: hidden; }
 .lp-nav-actions { display: flex; align-items: center; gap: 10px; }
 .lp-icon-btn { width: 36px; height: 36px; border-radius: 8px; cursor: pointer; background: transparent; border: 1px solid var(--border-subtle); color: var(--text-muted); transition: color .15s ease, border-color .15s ease; }
 .lp-icon-btn:hover { color: var(--text-main); border-color: var(--border-strong); }
+.lp-link-login { font-size: .9rem; font-weight: 600; color: var(--text-muted); padding: 8px 6px; }
+.lp-link-login:hover { color: var(--text-main); }
 
 /* ---- buttons ---- */
 .lp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; font-family: inherit; font-weight: 600; border-radius: 10px; cursor: pointer; border: 1px solid transparent; transition: background .15s ease, border-color .15s ease, color .15s ease; white-space: nowrap; }

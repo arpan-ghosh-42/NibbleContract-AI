@@ -84,10 +84,21 @@ flowchart LR
 
 In testing this caught real hallucinations: for a made-up company, the funding agent "found" a seed round and a Series A with links no tool had returned. Neither counted.
 
+## Login
+
+The tool at `/app` is for logged-in users; the landing page stays public. Accounts are handled by [Supabase Auth](https://supabase.com/docs/guides/auth) with email and password: create an account, log in, log out, and reset a forgotten password from `/login`.
+
+- The browser logs in with `supabase-js`. Every check sends the user's access token, and the server ([`auth.py`](auth.py)) confirms it with Supabase before spending any Groq or Tavily credits. Requests without a valid login get `401`.
+- Only the Supabase URL and the publishable key reach the browser; both are public by design. Confirmed logins are cached for 5 minutes, keyed by a hash of the token.
+- Without `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` the app runs open, which is handy for local development.
+
+Supabase's built-in email service only delivers to your own Supabase team (2 emails an hour). For public sign-ups, either turn off **Confirm email** (Authentication → Sign In / Providers → Email) or add your own SMTP provider.
+
 ## Free APIs
 
 | Service | Used for | Key |
 |---|---|---|
+| [Supabase](https://supabase.com) (free plan) | Accounts and login | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` |
 | [Groq](https://console.groq.com) (free tier) | Post analyst, agents, offer review | `GROQ_API_KEY` (required) |
 | [Tavily](https://tavily.com) (1,000 free credits/month) | Web, Reddit and funding search, about 3 credits per check (at most 6), cached 6 hours | `TAVILY_API_KEY` (optional) |
 | DuckDuckGo (via `ddgs`) | Search fallback when Tavily is missing, fails or runs out | none |
@@ -118,6 +129,8 @@ Open http://127.0.0.1:5001 for the landing page, or http://127.0.0.1:5001/app fo
 | `GROQ_AGENT_MODELS` | `openai/gpt-oss-20b,openai/gpt-oss-120b,openai/gpt-oss-20b` | One model per agent: reputation, company, funding |
 | `GROQ_PARSER_MODEL` | `openai/gpt-oss-120b` | Turns each agent's answer into the Pydantic schema |
 | `LIVE_LOOKUPS` | `1` | `0` turns off every online check |
+| `SUPABASE_URL` | | Your Supabase project URL; with the key below, turns login on |
+| `SUPABASE_PUBLISHABLE_KEY` | | The project's publishable key (`sb_publishable_...`) |
 
 ### Tests
 
@@ -129,6 +142,8 @@ python -m pytest
 The tests use fake models and tools, so they never touch the network. They cover the scoring rules (fee requests cap at 25, funding is a bonus only, no reviews is neutral), evidence grounding (invented URLs are dropped), internship-type handling, orchestrator timeouts and fallbacks, and the LinkedIn/Naukri message.
 
 ## API
+
+Both check endpoints need `Authorization: Bearer <Supabase access token>` when login is on.
 
 - `POST /check-post`: form fields `text` or `url`, plus optional `company_name`, `website`. Returns `score`, `risk_level`, `risk_label`, `confidence`, `internship_type`, `signals`, `checks`, `agents` (the timeline), `questions`, `checklist`, `limits`.
 - `POST /decode`: an offer letter as `text` or `file` (PDF/.txt, up to 5 MB), plus optional `sender_email`, `company_name`, `website`. Returns the term review with an `authenticity` block (score, risk level, signals, agents).
@@ -147,6 +162,7 @@ This is an estimate from the text and public information. It cannot confirm that
 ```text
 decoder/
 ├── app.py              # Flask routes, brand name and tagline
+├── auth.py             # login check for the API (Supabase Auth)
 ├── job_post.py         # job-post check: link reading, post analyst, internship type
 ├── job_signals.py      # job-post signal catalogue and scoring rules
 ├── decoder.py          # offer-letter review: extraction, prompts, JSON repair, quote verification

@@ -22,8 +22,9 @@ const EXAMPLE_ALIASES = { scam: 'post_risky', fake: 'offer_fake' };
 
 const $ = id => document.getElementById(id);
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
+    await startSession();
     loadReports();
     setupEvents();
     renderHistory();
@@ -34,6 +35,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const wanted = EXAMPLE_ALIASES[params.get('example')] || params.get('example');
     if (wanted && window.FPD_SAMPLES && window.FPD_SAMPLES[wanted]) loadExample(wanted);
 });
+
+// The tool is for logged-in users: wait for the login check before showing anything.
+async function startSession() {
+    const auth = window.NC_AUTH;
+    if (!auth || !auth.enabled) {
+        document.body.classList.remove('auth-pending');
+        return;
+    }
+    let session;
+    try {
+        session = await auth.requireLogin();
+    } catch (e) {
+        // Never leave a blank page: show the tool; the server still refuses checks without a valid login.
+        document.body.classList.remove('auth-pending');
+        showToast("Couldn't confirm your login. Try refreshing the page.");
+        return;
+    }
+    $('userEmail').textContent = (session.user && session.user.email) || 'Logged in';
+    $('userBox').hidden = false;
+    $('logoutBtn').addEventListener('click', () => auth.logout());
+    document.body.classList.remove('auth-pending');
+}
 
 function setTool(tool) {
     State.tool = TOOLS[tool] ? tool : 'post';
@@ -262,12 +285,17 @@ async function submitCheck(kind, endpoint, form, buttonId, toEntry) {
         <div class="hint">The online checks can take up to a minute.</div></div></div>`;
 
     try {
-        const response = await fetch(endpoint, { method: 'POST', body: form });
+        const headers = window.NC_AUTH ? await window.NC_AUTH.authHeaders() : {};
+        const response = await fetch(endpoint, { method: 'POST', body: form, headers: headers });
         let data;
         try {
             data = await response.json();
         } catch (e) {
             data = { error: `The server returned an unexpected response (${response.status}).` };
+        }
+        if (response.status === 401 && data.login && window.NC_AUTH) {
+            window.NC_AUTH.goToLogin();
+            return;
         }
 
         if (data.error || !data.result) {

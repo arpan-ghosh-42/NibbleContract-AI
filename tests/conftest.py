@@ -37,6 +37,13 @@ def fake_client():
 
 
 @pytest.fixture(autouse=True)
+def login_off_by_default(monkeypatch):
+    """app.py loads .env; tests start with login off and turn it on explicitly (tests/test_auth.py)."""
+    monkeypatch.delenv("SUPABASE_URL", raising=False)
+    monkeypatch.delenv("SUPABASE_PUBLISHABLE_KEY", raising=False)
+
+
+@pytest.fixture(autouse=True)
 def clear_caches():
     from agents import orchestrator
     orchestrator._cache.clear()
