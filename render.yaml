@@ -3,6 +3,7 @@ services:
     name: nibblecontract-ai
     runtime: python
     plan: free
+    region: singapore          # closest Render region to users in India
     buildCommand: pip install -r requirements.txt
     # Long documents are chunked into several AI calls, so allow well over gunicorn's 30s default.
     startCommand: gunicorn app:app --workers 2 --threads 4 --timeout 180 --bind 0.0.0.0:$PORT
@@ -10,6 +11,14 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.7
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
+      # Public by design (the browser needs them for login), so they can live in the repo.
+      - key: SUPABASE_URL
+        value: https://qcahnkxvmpwmaxzeabno.supabase.co
+      - key: SUPABASE_PUBLISHABLE_KEY
+        value: sb_publishable_srAfUG6UaxQ40d3VK4qhWw_rM0YNwLg
+      # Secrets: Render asks for these when you create the service.
       - key: GROQ_API_KEY
         sync: false
       - key: TAVILY_API_KEY
